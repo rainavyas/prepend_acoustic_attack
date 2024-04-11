@@ -1,15 +1,17 @@
 import torch
 import torch.nn as nn
-from whisper.audio import log_mel_spectrogram, pad_or_trim, N_SAMPLES, N_FRAMES
+from whisper.audio import log_mel_spectrogram, pad_or_trim, N_SAMPLES, N_FRAMES, load_audio
 
 class AudioAttackModelWrapper(nn.Module):
     '''
         Whisper Model wrapper with learnable audio segment attack prepended to speech signals
     '''
-    def __init__(self, attack_size=5120, device=None):
+    def __init__(self, tokenizer, attack_size=5120, device=None):
         super(AudioAttackModelWrapper, self).__init__()
         self.attack_size = attack_size
-        self.audio_attack_segment = nn.Parameter(torch.rand(attack_size)) 
+        self.audio_attack_segment = nn.Parameter(torch.rand(attack_size))
+        self.tokenizer = tokenizer
+        self.device = device
     
     def forward(self, audio_vector, whisper_model):
         '''
@@ -33,7 +35,7 @@ class AudioAttackModelWrapper(nn.Module):
             based on https://github.com/openai/whisper/blob/main/whisper/audio.py
         '''
         padded_mel = log_mel_spectrogram(audio, whisper_model.model.dims.n_mels, padding=N_SAMPLES)
-        mel = pad_or_trim(mel, N_FRAMES)
+        mel = pad_or_trim(padded_mel, N_FRAMES)
         return mel
     
     def _mel_to_logit(self, mel: torch.Tensor, whisper_model):
@@ -63,7 +65,7 @@ class AudioAttackModelWrapper(nn.Module):
         if do_attack:
             # prepend attack
             audio = load_audio(audio)
-            audio = torch.from_numpy(audio)
+            audio = torch.from_numpy(audio).to(self.device)
             audio = torch.cat((self.audio_attack_segment, audio), dim=0)
 
         return whisper_model.predict(audio)

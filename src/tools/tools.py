@@ -37,6 +37,15 @@ def eval_neg_seq_len(hyps):
         nlens += (len(hyp.split()))
     return (-1)*nlens/len(hyps)
 
+def eval_frac_0_samples(hyps):
+    '''
+        Fraction of samples of 0 tokens
+    '''
+    no_len_count = 0
+    for hyp in hyps:
+        if len(hyp) == 0:
+            no_len_count +=1
+    return no_len_count/len(hyps)
 
 class AverageMeter(object):
     """Computes and stores the average and current value"""

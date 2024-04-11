@@ -1,4 +1,11 @@
+import json
+import os
+import torch
+from tqdm import tqdm
+from whisper.tokenizer import get_tokenizer
 
+from src.tools.tools import eval_neg_seq_len, eval_frac_0_samples
+from .audio_attack_model_wrapper import AudioAttackModelWrapper
 
 class AudioBaseAttacker():
     '''
@@ -8,11 +15,12 @@ class AudioBaseAttacker():
         self.attack_args = attack_args
         self.whisper_model = model # assume it is a whisper model
         self.device = device
+        self.tokenizer = get_tokenizer(self.whisper_model.model.is_multilingual, num_languages=self.whisper_model.model.num_languages, task=self.whisper_model.task)
 
         # model wrapper with audio attack segment prepending ability
-        self.audio_attack_model = AudioAttackModelWrapper(attack_size=attack_args.attack_size, device=device).to(device)
+        self.audio_attack_model = AudioAttackModelWrapper(self.tokenizer, attack_size=attack_args.attack_size, device=device).to(device)
 
-    def eval_uni_attack(self, data, audio_attack_model_dir=None, attack_epoch=-1, cache_dir=None, force_run=False):
+    def eval_uni_attack(self, data, attack_model_dir=None, attack_epoch=-1, cache_dir=None, force_run=False):
         '''
             Generates transcriptions with audio attack segment (saves to cache)
             Computes the (negative average sequence length) = -1*mean(len(prediction))
@@ -26,8 +34,8 @@ class AudioBaseAttacker():
         if os.path.isfile(fpath) and not force_run:
             with open(fpath, 'r') as f:
                 hyps = json.load(f)
-            nsl = eval_neg_seq_len(hyps)
-            return nsl
+            nsl, frac0 = eval_neg_seq_len(hyps), eval_frac_0_samples(hyps)
+            return nsl, frac0
         
         # no cache
         if attack_epoch == -1:
@@ -36,17 +44,17 @@ class AudioBaseAttacker():
             # load model with attack vector -- note if epoch=0, that is a rand prepend attack
             do_attack = True
             if attack_epoch > 0:
-                self.audio_attack_model.load_state_dict(torch.load(f'{audio_attack_model_dir}/epoch{attack_epoch}/model.th'))
+                self.audio_attack_model.load_state_dict(torch.load(f'{attack_model_dir}/epoch{attack_epoch}/model.th'))
 
         hyps = []
         for sample in tqdm(data):
             with torch.no_grad():
                 hyp = self.audio_attack_model.transcribe(self.whisper_model, sample['audio'], do_attack=do_attack)
             hyps.append(hyp)
-        nsl = eval_neg_seq_len(hyps)
+        nsl, frac0 = eval_neg_seq_len(hyps), eval_frac_0_samples(hyps)
 
         if cache_dir is not None:
             with open(fpath, 'w') as f:
                 json.dump(hyps, f)
 
-        return nsl
+        return nsl, frac0

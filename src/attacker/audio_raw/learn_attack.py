@@ -4,7 +4,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import random
 import os
 from tqdm import tqdm
-
+from whisper.audio import load_audio
 
 from .base import AudioBaseAttacker
 from src.tools.tools import set_seeds, AverageMeter
@@ -16,9 +16,8 @@ class AudioAttack(AudioBaseAttacker):
        Prepend adversarial attack in audio space
     '''
     def __init__(self, attack_args, whisper_model, device, lr=1e-3):
-        MelBaseAttacker.__init__(self, attack_args, whisper_model, device)
+        AudioBaseAttacker.__init__(self, attack_args, whisper_model, device)
         self.optimizer = torch.optim.AdamW(self.audio_attack_model.parameters(), lr=lr, eps=1e-8)
-        self.tokenizer = get_tokenizer(self.whisper_model.model.is_multilingual, num_languages=self.whisper_model.model.num_languages, task=self.whisper_model.task)
 
     def _loss(self, logits):
         '''
@@ -36,7 +35,7 @@ class AudioAttack(AudioBaseAttacker):
 
     def train_step(self, train_loader, epoch, print_freq=25):
         '''
-            Run one train epoch
+            Run one train epoch - Projected Gradient Descent
         '''
         losses = AverageMeter()
 
@@ -60,13 +59,13 @@ class AudioAttack(AudioBaseAttacker):
             else:
                 max_val = 100000
             with torch.no_grad():  
-                self.audio_attack_model.audio_attack_segment.clamp_(min=0, max=self.attack_args.clip_val)
+                self.audio_attack_model.audio_attack_segment.clamp_(min=-1*max_val, max=max_val)
         
             # record loss
             losses.update(loss.item(), mels.size(0))
             if i % print_freq == 0:
-                print(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.5f} ({losses.avg:.5f})')
-        
+                print(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.5f} ({losses.avg:.5f})')        
+
 
     def _prep_dl(self, data, bs=16, shuffle=False):
         '''
@@ -79,7 +78,16 @@ class AudioAttack(AudioBaseAttacker):
             audio_np = load_audio(d['audio'])
             audio_vector = torch.from_numpy(audio_np)
             audio_vectors.append(audio_vector)
+        
+        def pad_sequence(tensors, padding_value=0):
+            max_length = max(len(tensor) for tensor in tensors)
+            padded_tensors = []
+            for tensor in tensors:
+                padded_tensor = torch.nn.functional.pad(tensor, (0, max_length - len(tensor)), value=padding_value)
+                padded_tensors.append(padded_tensor)
+            return padded_tensors
 
+        audio_vectors = pad_sequence(audio_vectors)
         audio_vectors = torch.stack(audio_vectors, dim=0)
         ds = TensorDataset(audio_vectors)
         dl = DataLoader(ds, batch_size=bs, shuffle=shuffle)
@@ -104,7 +112,7 @@ class AudioAttack(AudioBaseAttacker):
                 # save model at this epoch
                 if not os.path.isdir(f'{fpath}/epoch{epoch+1}'):
                     os.mkdir(f'{fpath}/epoch{epoch+1}')
-                state = self.softprompt_model.state_dict()
+                state = self.audio_attack_model.state_dict()
                 torch.save(state, f'{fpath}/epoch{epoch+1}/model.th')
 
 

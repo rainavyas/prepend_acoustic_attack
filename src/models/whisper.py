@@ -27,7 +27,7 @@ class WhisperModel:
         self.task = task
         self.language = language # source audio language
     
-    def predict(self, audio='')
+    def predict(self, audio=''):
         '''
             Whisper decoder output here
         '''

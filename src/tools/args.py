@@ -25,7 +25,7 @@ def attack_args():
 
 
     # eval attack args
-    commandLineParser.add_argument('--attack_epoch', type=int, default=-1, help='Specify which training epoch of mel softprompt attack to evaluate; -1 means no attack')
+    commandLineParser.add_argument('--attack_epoch', type=int, default=-1, help='Specify which training epoch of attack to evaluate; -1 means no attack')
     commandLineParser.add_argument('--force_run', action='store_true', help='Do not load from cache')
     commandLineParser.add_argument('--not_none', action='store_true', help='Do not evaluate the none attack')
     commandLineParser.add_argument('--eval_train', action='store_true', help='Evaluate attack on the train split')
