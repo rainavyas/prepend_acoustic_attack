@@ -1,8 +1,8 @@
 import torch
 import whisper
 import editdistance
+from whisper.tokenizer import get_tokenizer
 
-# from whisper.normalizers import EnglishTextNormalizer
 
 CACHE_DIR = '/home/vr313/rds/rds-altaslp-8YSp2LXTlkY/experiments/rm2114/.cache'
 
@@ -26,12 +26,14 @@ class WhisperModel:
         self.model = whisper.load_model(MODEL_NAME_MAPPER[model_name], device=device, download_root=CACHE_DIR)
         self.task = task
         self.language = language # source audio language
+        self.tokenizer = self.tokenizer = get_tokenizer(self.model.is_multilingual, num_languages=self.model.num_languages, language=self.language, task=self.task)
+
     
     def predict(self, audio=''):
         '''
             Whisper decoder output here
         '''
-        result = self.model.transcribe(audio, language=self.language) # to update to source language - no need to detect
+        result = self.model.transcribe(audio, language=self.language, task=self.task)
         segments = []
         for segment in result['segments']:
             segments.append(segment['text'].strip())

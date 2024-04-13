@@ -2,7 +2,7 @@ import json
 import os
 import torch
 from tqdm import tqdm
-from whisper.tokenizer import get_tokenizer
+
 
 from src.tools.tools import eval_neg_seq_len, eval_frac_0_samples
 from .audio_attack_model_wrapper import AudioAttackModelWrapper
@@ -13,12 +13,11 @@ class AudioBaseAttacker():
     '''
     def __init__(self, attack_args, model, device):
         self.attack_args = attack_args
-        self.whisper_model = model # assume it is a whisper model
+        self.whisper_model = model
         self.device = device
-        self.tokenizer = get_tokenizer(self.whisper_model.model.is_multilingual, num_languages=self.whisper_model.model.num_languages, task=self.whisper_model.task)
 
         # model wrapper with audio attack segment prepending ability
-        self.audio_attack_model = AudioAttackModelWrapper(self.tokenizer, attack_size=attack_args.attack_size, device=device).to(device)
+        self.audio_attack_model = AudioAttackModelWrapper(self.whisper_model.tokenizer, attack_size=attack_args.attack_size, device=device).to(device)
 
     def eval_uni_attack(self, data, attack_model_dir=None, attack_epoch=-1, cache_dir=None, force_run=False):
         '''

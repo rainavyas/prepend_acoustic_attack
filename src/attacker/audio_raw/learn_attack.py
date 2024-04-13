@@ -25,7 +25,7 @@ class AudioAttack(AudioBaseAttacker):
 
         logits: Torch.tensor [batch x vocab_size]
         '''
-        eot_id = self.tokenizer.eot
+        eot_id = self.whisper_model.tokenizer.eot
 
         sf = nn.Softmax(dim=1)
         log_probs = torch.log(sf(logits))

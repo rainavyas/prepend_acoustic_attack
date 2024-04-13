@@ -19,6 +19,7 @@ def attack_args():
     commandLineParser.add_argument('--save_freq', type=int, default=1, help='Epoch frequency for saving attack')
     commandLineParser.add_argument('--attack_size', type=int, default=5120, help='Length of attack segment')
     commandLineParser.add_argument('--bs', type=int, default=16, help='Batch size for training attack')
+    commandLineParser.add_argument('--lr', type=float, default=1e-3, help='Adversarial Attack learning rate')
     commandLineParser.add_argument('--clip_val', type=float, default=-1, help='Value (maximum) to clip the log mel vectors. -1 means no clipping')
 
 
@@ -39,6 +40,7 @@ def attack_args():
 def analysis_args():
     commandLineParser = argparse.ArgumentParser(allow_abbrev=False)
     commandLineParser.add_argument('--compare_with_audio', action='store_true', help='Include a real audio file')
+    commandLineParser.add_argument('--sample_id', type=int, default=42, help='Specify which data sample to compare to')
     return commandLineParser.parse_known_args()
 
 
