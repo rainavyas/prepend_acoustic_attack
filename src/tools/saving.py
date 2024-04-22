@@ -7,6 +7,8 @@ def base_path_creator(core_args, create=True):
     path = next_dir(path, core_args.model_name, create=create)
     path = next_dir(path, core_args.task, create=create)
     path = next_dir(path, core_args.language, create=create)
+    if core_args.seed != 1:
+        path = next_dir(path, f'seed{core_args.seed}', create=create)
     return path
 
 def attack_base_path_creator_train(attack_args, path='.', create=True):

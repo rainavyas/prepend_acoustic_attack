@@ -1,4 +1,5 @@
 from .speech import _librispeech, _tedlium, _mgb, _artie
+from .fleurs import _fleurs
 
 
 def load_data(core_args):
@@ -10,6 +11,9 @@ def load_data(core_args):
                         'ref':      <Reference transcription>,
                     }
     '''
+    if core_args.data_name == 'fleurs':
+        return None, _fleurs(lang=core_args.language)
+
     if core_args.data_name == 'tedlium':
         return None, _tedlium()
 

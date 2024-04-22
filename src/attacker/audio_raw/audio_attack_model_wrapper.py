@@ -64,7 +64,8 @@ class AudioAttackModelWrapper(nn.Module):
         '''
         if do_attack:
             # prepend attack
-            audio = load_audio(audio)
+            if isinstance(audio, str):
+                audio = load_audio(audio)
             audio = torch.from_numpy(audio).to(self.device)
             audio = torch.cat((self.audio_attack_segment, audio), dim=0)
 

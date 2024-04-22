@@ -1,5 +1,6 @@
 from whisper.normalizers import EnglishTextNormalizer
-import editdistance
+# import editdistance
+import jiwer
 import torch
 import random
 
@@ -15,18 +16,20 @@ def get_default_device(gpu_id=0):
         print("No CUDA found")
         return torch.device('cpu')
 
-def eval_wer(hyps, refs):
-    # assuming the texts are already aligned
+def eval_wer(hyps, refs, get_details=False):
+    # assuming the texts are already aligned and there is no ID in the texts
     # WER
     std = EnglishTextNormalizer()
-    errors = 0
-    crefs = 0
-    for hyp, ref, in zip(hyps, refs):
-        a = std(' '.join(hyp.split()[1:]))
-        b = std(' '.join(ref.split()[1:]))
-        errors += editdistance.eval(a.split(), b.split())
-        crefs += len(b.split())
-    return errors/crefs
+    hyps = [std(hyp) for hyp in hyps]
+    refs = [std(ref) for ref in refs]
+    out = jiwer.process_words(refs, hyps)
+    if not get_details:
+        return out.wer
+    else:
+        # return ins, del and sub rates
+        total = out.insertions + out.deletions + out.substitutions + out.hits
+        return {'WER':out.wer, 'INS':out.insertions/total, 'DEL':out.deletions/total, 'SUB':out.substitutions/total, 'HIT':out.hits/total}
+
 
 def eval_neg_seq_len(hyps):
     '''

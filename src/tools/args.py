@@ -24,7 +24,6 @@ def attack_args():
 
 
 
-
     # eval attack args
     commandLineParser.add_argument('--attack_epoch', type=int, default=-1, help='Specify which training epoch of attack to evaluate; -1 means no attack')
     commandLineParser.add_argument('--force_run', action='store_true', help='Do not load from cache')
@@ -39,8 +38,19 @@ def attack_args():
 
 def analysis_args():
     commandLineParser = argparse.ArgumentParser(allow_abbrev=False)
+    commandLineParser.add_argument('--spectrogram', action='store_true', help='do analysis to generate spectrogram')
     commandLineParser.add_argument('--compare_with_audio', action='store_true', help='Include a real audio file')
     commandLineParser.add_argument('--sample_id', type=int, default=42, help='Specify which data sample to compare to')
+
+    commandLineParser.add_argument('--wer_no_0', action='store_true', help='WER of non-zero length samples')
+    commandLineParser.add_argument('--no_attack_path', type=str, default='', help='path to predictions with no attack')
+    commandLineParser.add_argument('--attack_path', type=str, default='', help='path to predictions with attack')
+
+    commandLineParser.add_argument('--saliency', action='store_true', help='Do saliency analysis. If you want to get saliency for a transfer attack - use attack transferability arguments')
+
+
+
+
     return commandLineParser.parse_known_args()
 
 
