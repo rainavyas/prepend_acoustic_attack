@@ -19,18 +19,19 @@ class AudioAttack(AudioBaseAttacker):
         AudioBaseAttacker.__init__(self, attack_args, whisper_model, device)
         self.optimizer = torch.optim.AdamW(self.audio_attack_model.parameters(), lr=lr, eps=1e-8)
 
+
     def _loss(self, logits):
         '''
         The (average) negative log probability of the end of transcript token
 
         logits: Torch.tensor [batch x vocab_size]
         '''
-        eot_id = self.whisper_model.tokenizer.eot
+        tgt_id = self._get_tgt_tkn_id()
 
         sf = nn.Softmax(dim=1)
         log_probs = torch.log(sf(logits))
-        eot_probs = log_probs[:,eot_id].squeeze()
-        return -1*torch.mean(eot_probs)
+        tgt_probs = log_probs[:,tgt_id].squeeze()
+        return -1*torch.mean(tgt_probs)
     
 
     def train_step(self, train_loader, epoch, print_freq=25):
@@ -67,7 +68,8 @@ class AudioAttack(AudioBaseAttacker):
                 print(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.5f} ({losses.avg:.5f})')        
 
 
-    def _prep_dl(self, data, bs=16, shuffle=False):
+    @staticmethod
+    def _prep_dl(data, bs=16, shuffle=False):
         '''
         Create batch of audio vectors
         '''

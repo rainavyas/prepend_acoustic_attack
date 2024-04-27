@@ -26,7 +26,6 @@ from src.tools.analysis_tools import saliency
 from src.models.load_model import load_model
 from src.data.load_data import load_data
 from src.attacker.selector import select_eval_attacker
-from src.attacker.selector import select_eval_attacker
 
 if __name__ == "__main__":
 
@@ -49,8 +48,16 @@ if __name__ == "__main__":
     if analysis_args.saliency:
         '''
             Compute the saliency of the adversarial segment an non-adversarial segment (average over dataset)
+            Split for successful (0 length prediction) and unsuccessful attacks
         '''
-        base_path = base_path_creator(core_args)
+        if not attack_args.transfer:
+            base_path = base_path_creator(core_args)
+            attack_base_path = attack_base_path_creator_eval(attack_args, base_path)
+            attack_hyp_file = f"{attack_base_path}/epoch-{attack_args.attack_epoch}_predictions.json"
+        else:
+            base_path = None
+            attack_base_path = None
+            attack_hyp_file = analysis_args.attack_path
 
         # Get the device
         if core_args.force_cpu:
@@ -64,6 +71,17 @@ if __name__ == "__main__":
         if attack_args.eval_train:
             test_data = train_data
 
+        # get indices of (un)/successful attack hyps
+        with open(attack_hyp_file, 'r') as f:
+            attack_hyps = json.load(f)
+        
+        inds = [i for i in range(len(attack_hyps)) if len(attack_hyps[i])==0]
+        success_data = [test_data[ind] for ind in inds]
+
+        inds = [i for i in range(len(attack_hyps)) if len(attack_hyps[i])!=0]
+        unsuccess_data = [test_data[ind] for ind in inds]
+
+
         # Load the model
         whisper_model = load_model(core_args, device=device)
 
@@ -76,17 +94,35 @@ if __name__ == "__main__":
             attack_model_dir = attack_args.attack_model_dir
         audio_attack_model.load_state_dict(torch.load(f'{attack_model_dir}/epoch{attack_args.attack_epoch}/model.th'))
 
-        # Compute saliencies
+        # Compute saliencies - unsuccessful attacks
+        print('UNSUCCESSFUL ATTACKS')
         adv_sals = []
         non_adv_sals = []
-        for sample in tqdm(test_data):
+        for sample in tqdm(unsuccess_data):
             adv_grad, non_adv_grad = saliency(sample['audio'], audio_attack_model, whisper_model, device)
             adv_sals.append(adv_grad)
             non_adv_sals.append(non_adv_grad)
         
+        print(f"Num Samples\t{len(unsuccess_data)}")
         print(f"Adv Saliency:\t{mean(adv_sals)}\t+-\t{stdev(adv_sals)}")
         print(f"Non-adv Saliency:\t{mean(non_adv_sals)}\t+-\t{stdev(non_adv_sals)}")
+        print("-----------------------------------------------------")
+        print()
 
+        # Compute saliencies - successful attacks
+        print('SUCCESSFUL ATTACKS')
+        adv_sals = []
+        non_adv_sals = []
+        for sample in tqdm(success_data):
+            adv_grad, non_adv_grad = saliency(sample['audio'], audio_attack_model, whisper_model, device)
+            adv_sals.append(adv_grad)
+            non_adv_sals.append(non_adv_grad)
+        
+        print(f"Num Samples\t{len(success_data)}")
+        print(f"Adv Saliency:\t{mean(adv_sals)}\t+-\t{stdev(adv_sals)}")
+        print(f"Non-adv Saliency:\t{mean(non_adv_sals)}\t+-\t{stdev(non_adv_sals)}")
+        print("-----------------------------------------------------")
+        print()
 
 
     if analysis_args.wer_no_0:
@@ -105,7 +141,7 @@ if __name__ == "__main__":
         with open(analysis_args.attack_path, 'r') as f:
             attack_hyps = json.load(f)
         
-        # get indices of non zero attack hyps
+        # get indices of unsuccessful attack hyps
         inds = [i for i in range(len(attack_hyps)) if len(attack_hyps[i])!=0]
 
         ahyps = [attack_hyps[ind] for ind in inds]

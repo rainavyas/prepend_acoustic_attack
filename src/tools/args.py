@@ -14,7 +14,8 @@ def core_args():
 def attack_args():
     commandLineParser = argparse.ArgumentParser(allow_abbrev=False)
     # train attack args
-    commandLineParser.add_argument('--attack_method', type=str, default='audio-raw', choices=['audio-raw', 'audio-tonal', 'mel'], help='Adversarial attack approach for training')
+    commandLineParser.add_argument('--attack_method', type=str, default='audio-raw', choices=['audio-raw', 'mel'], help='Adversarial attack approach for training')
+    commandLineParser.add_argument('--attack_token', type=str, default='eot', choices=['eot', 'transcribe'], help='Which non-acoustic token are we learning an acoustic realization for.')
     commandLineParser.add_argument('--max_epochs', type=int, default=20, help='Training epochs for attack')
     commandLineParser.add_argument('--save_freq', type=int, default=1, help='Epoch frequency for saving attack')
     commandLineParser.add_argument('--attack_size', type=int, default=5120, help='Length of attack segment')
@@ -46,7 +47,7 @@ def analysis_args():
     commandLineParser.add_argument('--no_attack_path', type=str, default='', help='path to predictions with no attack')
     commandLineParser.add_argument('--attack_path', type=str, default='', help='path to predictions with attack')
 
-    commandLineParser.add_argument('--saliency', action='store_true', help='Do saliency analysis. If you want to get saliency for a transfer attack - use attack transferability arguments')
+    commandLineParser.add_argument('--saliency', action='store_true', help='Do saliency analysis. If you want to get saliency for a transfer attack - use attack transferability arguments and attack_path argument')
 
 
 

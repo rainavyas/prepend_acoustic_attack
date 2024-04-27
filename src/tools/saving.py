@@ -14,6 +14,8 @@ def base_path_creator(core_args, create=True):
 def attack_base_path_creator_train(attack_args, path='.', create=True):
     path = next_dir(path, 'attack_train', create=create)
     path = next_dir(path, attack_args.attack_method, create=create)
+    if attack_args.attack_token != 'eot':
+        path = next_dir(path, f'attack_token{attack_args.attack_token}', create=create)
     path = next_dir(path, f'attack_size{attack_args.attack_size}', create=create)
     path = next_dir(path, f'clip_val{attack_args.clip_val}', create=create)
     return path
@@ -21,6 +23,8 @@ def attack_base_path_creator_train(attack_args, path='.', create=True):
 def attack_base_path_creator_eval(attack_args, path='.', create=True):
     path = next_dir(path, 'attack_eval', create=create)
     path = next_dir(path, attack_args.attack_method, create=create)
+    if attack_args.attack_token != 'eot':
+        path = next_dir(path, f'attack_token{attack_args.attack_token}', create=create)
     path = next_dir(path, f'attack_size{attack_args.attack_size}', create=create)
     path = next_dir(path, f'clip_val{attack_args.clip_val}', create=create)
     path = next_dir(path, f'attack-epoch{attack_args.attack_epoch}', create=create)

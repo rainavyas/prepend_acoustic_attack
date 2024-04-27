@@ -61,17 +61,21 @@ if __name__ == "__main__":
     else:
         attack_model_dir = attack_args.attack_model_dir
 
+    only_wer = False
+    if attack_args.attack_token == 'transcribe':
+        only_wer = True
+
     # 1) No attack
     if not attack_args.not_none:
         print('No attack')
-        nsl, frac0 = attacker.eval_uni_attack(test_data, attack_model_dir=attack_model_dir, attack_epoch=-1, cache_dir=attack_base_path, force_run=attack_args.force_run)
-        print(f'Negative Sequence Length (average):\t{nsl}\nFraction of 0 length samples:\t{frac0}')
+        out = attacker.eval_uni_attack(test_data, attack_model_dir=attack_model_dir, attack_epoch=-1, cache_dir=attack_base_path, force_run=attack_args.force_run, only_wer=only_wer)
+        print(out)
         print()
 
     # 2) Attack
     print('Attack')
-    nsl, frac0 = attacker.eval_uni_attack(test_data, attack_model_dir=attack_model_dir, attack_epoch=attack_args.attack_epoch, cache_dir=attack_base_path, force_run=attack_args.force_run)
-    print(f'Negative Sequence Length (average):\t{nsl}\nFraction of 0 length samples:\t{frac0}')
+    out = attacker.eval_uni_attack(test_data, attack_model_dir=attack_model_dir, attack_epoch=attack_args.attack_epoch, cache_dir=attack_base_path, force_run=attack_args.force_run, only_wer=only_wer)
+    print(out)
     print()
     
 
