@@ -65,20 +65,58 @@ The following arguments specify the attack configuration:
 
 An example command for learning an attack is given below.
 
-`python train_attack.py --model_name whisper-base-multi --attack_method audio-raw --max_epochs 40 --clip_val 0.02 --attack_size 10240 --save_freq 10`
+`python train_attack.py --model_name whisper-base-multi --data_name librispeech --attack_method audio-raw --max_epochs 40 --clip_val 0.02 --attack_size 10240 --save_freq 10`
 
 ## Evaluating a universal prepend acoustic attack
 
+`eval_attack.py` is used to evaluate the efficacy of the attacks. Running the evaluation script evaluates the _no attack_ setting (the test audio samples are not modified) and the _attack_ setting (the test audio samples have the universal acoustic attack segment prepended in the raw audio space). For each setting, two metrics are reported:
+
+1. **NSL** (Negative Sequence Length) - The (negative) average sequence length in words of the model predictions. The adversary aims to maximize this (as close to 0 as possible).
+2. **frac 0** - The fraction of test samples for which the predicted sequence length was of length 0. This represents the fraction of _fully successful_ adversarial attacks, as the universal attack successfully _mutes_ the Whisper model at test time on these unseen test samples.
+
+During evaluation the following extra arguments may be of use:
+
+- `attack_epoch` : Each universal attack is trained for multiple epochs (until `max_epochs`). This argument allows you to select which trained version of the attack to evaluate. Note that you would have to set an appropriate `save_freq` for the trained universal attack segment to be saved at the selected `attack_epoch`
+  
+- `not-none` : Simply pass this argument if you do not want the evaluation script to evaluate the _no attack_ setting.
+
+An example command for evaluation is given below:
+
+`python eval_attack.py --model_name whisper-medium-multi --data_name librispeech --attack_method audio-raw --clip_val 0.02 --attack_size 10240 --attack_epoch 160 --not_none`
+
+
 ### Transfer attack evaluation
 
+Beyond just evaluating the learnt universal adversarial attacks in the _matched_ setting, where the same dataset (attack is learnt on the validation split and evaluated on the test split) and same model are used, we can also evaluate how well the attack _transfers_ to different datasets and even tasks.
+
+To evaluate the transferability the following further arguments are required:
+
+- `transfer` : Simply pass this flag to indicate it is a transferability experiment
+
+- `attack_model_dir` : This specifies the path to the model directory with the saved model wrapper containing the learnt universal attack segment. During training these directories and paths are automatically created. Refer to the example below to see the typical structure of these paths.
+
+The below example looks at the transferability of an attack learnt on _librispeech_ to the _tedlium_ dataset.
+
+`python eval_attack.py --model_name whisper-medium --data_name tedlium --attack_method audio-raw --attack_epoch 160 --attack_size 10240 --transfer --attack_model_dir experiments/librispeech/whisper-medium/transcribe/en/attack_train/audio-raw/attack_size10240/clip_val0.02/prepend_attack_models/ --not_none`
+
+
+The next examples looks at the transferability of an attack learnt on _librispeech_ for the _transcribe_ task, to the _fleurs_ French dataset for the _translate_ task.
+
+`python eval_attack.py --model_name whisper-tiny-multi --data_name fleurs --attack_size 10240 --language fr --task translate --attack_method audio-raw --attack_epoch 40 --transfer --attack_model_dir experiments/librispeech/whisper-tiny-multi/transcribe/en/attack_train/audio-raw/attack_size10240/clip_val0.02/prepend_attack_models/ --not_none`
+
+
 ## Analysis
+
+Various forms of analysis are conducted in the paper. Here we give the commands used to generate the numbers given in the paper.
 
 
 # Data
 
 Describe here how certain datasets need to pre-downloaded and stored in particular directory. Also specify which part of the code needs to be updated to point to this directory.
 
-# Results include results and graphs here
+# Results
+
+include results and graphs here
 
 
 # Citation
