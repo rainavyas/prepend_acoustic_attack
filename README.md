@@ -32,7 +32,7 @@ This code has been tested on python>=3.9.
 
 Fork the repository and then git clone
 
-`git clone https://github.com/rainavyas/prepend_acoustic_attack`
+`git clone https://github.com/<username>/prepend_acoustic_attack`
 
 
 Install all necessary packages by creating a conda environment from the existing `environment.yml` file.
