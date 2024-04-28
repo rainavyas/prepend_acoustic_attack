@@ -25,7 +25,6 @@ In the paper, `tiny`, `base`, `small` and `medium` refer to the multi-lingual ve
 | medium | whisper-medium-multi |
 
 
-You can see all the arguments used in the different scripts in `src/tools/args.py`.
 
 ## Package Installation
 
@@ -44,6 +43,8 @@ conda activate venv_gector
 ```
 
 ## Standard Arguments for Attack Configuration
+
+You can see all the arguments used in the different scripts in `src/tools/args.py`.
 
 The following arguments specify the attack configuration:
 
