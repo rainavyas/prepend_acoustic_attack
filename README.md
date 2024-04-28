@@ -9,7 +9,7 @@ Abstract here
 
 
 
-The following subsections give examples commands to run the training, evaluations and analysis necessary to reproduce the results in our paper.
+The following subsections give example commands to run the training, evaluations and analysis necessary to reproduce the results in our paper.
 
 In the paper, `tiny`, `base`, `small` and `medium` refer to the multi-lingual versions of the Whisper models, whilst `tiny.en`, `base.en`, `small.en` and `medium.en` refer to the English-only versions of the Whisper Models (this is the nomenclature used in the original Whisper paper). However, we use a slightly different naming convention in the codebase when specifying the model name as an argument to the scripts. The Table below gives the mapping from the names used in the paper and the equivalent names used in the codebase.
 
