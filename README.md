@@ -5,8 +5,11 @@ This is the offical codebase for the Paper _Muting Whisper: A Universal Acoustic
 ## Abstract
 Abstract here
 
-# Quick Start (Running the Code)
+# Try it out
 
+We have uploaded all the pre-learnt universal acoustic adversarial attack segments in   `./audio_attacks/`. Open `demo.ipynb` and try evaluating them for yourself. Observe how these attacks can successfully mute Whisper models for unseen speech signals.
+
+# Quick Start (Running the Code)
 
 
 The following subsections give example commands to run the training, evaluations and analysis necessary to reproduce the results in our paper.
