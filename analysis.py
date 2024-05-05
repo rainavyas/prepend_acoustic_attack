@@ -127,8 +127,10 @@ if __name__ == "__main__":
 
     if analysis_args.wer_no_0:
         '''
-            Get the WER of non zero length samples for attacked samples, 
+            Get the WER of non zero length samples for attacked samples (unsuccessful), 
             and also get equivalent WER for the same samples when not attacked.
+
+            Repeat for successful samples
         '''
         # load data
         train_data, test_data = load_data(core_args)
@@ -148,8 +150,60 @@ if __name__ == "__main__":
         no_ahyps = [no_attack_hyps[ind] for ind in inds]
         refs = [test_data[ind]['ref'] for ind in inds]
 
+        # Samples
+        print('UNSUCCESSFUL SAMPLES')
+        print('------------------------------------')
+        print(f'Num Samples:\t{len(refs)}')
+        print()
+
+        # ASL
+        no_a_asl = -1*eval_neg_seq_len(no_ahyps)
+        a_asl = -1*eval_neg_seq_len(ahyps)
+        print(f'No Attack ASL:\t{no_a_asl}')
+        print(f'Attack ASL:\t{a_asl}')
+        print()
+
+        # no attack vs ref
+        out = eval_wer(no_ahyps, refs, get_details=True)
+        print('No attack vs ref')
+        print(f'WER:\t{out["WER"]*100}')
+        print(f'INS:\t{out["INS"]*100}')
+        print(f'DEL:\t{out["DEL"]*100}')
+        print(f'SUB:\t{out["SUB"]*100}')
+        print()
+
+        # attack vs ref
+        out = eval_wer(ahyps, refs, get_details=True)
+        print('Attack vs ref')
+        print(f'WER:\t{out["WER"]*100}')
+        print(f'INS:\t{out["INS"]*100}')
+        print(f'DEL:\t{out["DEL"]*100}')
+        print(f'SUB:\t{out["SUB"]*100}')
+        print()
+
+        # no attack vs attack
+        out = eval_wer(ahyps, no_ahyps, get_details=True)
+        print('Attack vs No Attack')
+        print(f'WER:\t{out["WER"]*100}')
+        print(f'INS:\t{out["INS"]*100}')
+        print(f'DEL:\t{out["DEL"]*100}')
+        print(f'SUB:\t{out["SUB"]*100}')
+        print()
+
+
+        # repeat for successful samples
+
+        # get indices of unsuccessful attack hyps
+        inds = [i for i in range(len(attack_hyps)) if len(attack_hyps[i])==0]
+
+        ahyps = [attack_hyps[ind] for ind in inds]
+        no_ahyps = [no_attack_hyps[ind] for ind in inds]
+        refs = [test_data[ind]['ref'] for ind in inds]
 
         # Samples
+        print()
+        print('SUCCESSFUL SAMPLES')
+        print('------------------------------------')
         print(f'Num Samples:\t{len(refs)}')
         print()
 
