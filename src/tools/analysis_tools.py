@@ -5,6 +5,31 @@ def saliency(audio, audio_attack_model, whisper_model, device):
     '''
         Get saliency of audio and audio_attack_segment
     '''
+    adv_grad, audio_grad = _saliency_calculation(audio, audio_attack_model, whisper_model, device)
+
+    adv_grad_norm = torch.linalg.vector_norm(adv_grad)
+    audio_grad_norm = torch.linalg.vector_norm(audio_grad)
+
+    if len(audio) == 0:
+        audio_grad_norm = 0
+    else:
+        audio_grad_norm = audio_grad_norm.detach().cpu().item()
+
+    return adv_grad_norm.detach().cpu().item(), audio_grad_norm
+
+
+def frame_level_saliency(audio, audio_attack_model, whisper_model, device):
+    '''
+        get the saliency per frame of attack segment and speech signal
+    '''
+    adv_grad, audio_grad = _saliency_calculation(audio, audio_attack_model, whisper_model, device)
+    saliencies = torch.abs(torch.cat((adv_grad, audio_grad), dim=0))
+    return saliencies.detach().cpu()
+
+def _saliency_calculation(audio, audio_attack_model, whisper_model, device):
+    '''
+        Forward-backward pass
+    '''
     if isinstance(audio, str):
         audio = load_audio(audio)
     audio = torch.from_numpy(audio).to(device)
@@ -22,19 +47,7 @@ def saliency(audio, audio_attack_model, whisper_model, device):
 
     # compute gradients
     prob.backward()
-
     adv_grad = audio_attack_model.audio_attack_segment.grad
-    # adv_grad_norm = torch.linalg.vector_norm(adv_grad)/(len(adv_grad)**0.5)
-    adv_grad_norm = torch.linalg.vector_norm(adv_grad)
-
     audio_grad = audio.grad
-    # audio_grad_norm = torch.linalg.vector_norm(audio_grad)/(len(audio_grad)**0.5)
-    audio_grad_norm = torch.linalg.vector_norm(audio_grad)
 
-    if len(audio) == 0:
-        audio_grad_norm = 0
-    else:
-        audio_grad_norm = audio_grad_norm.detach().cpu().item()
-
-
-    return adv_grad_norm.detach().cpu().item(), audio_grad_norm
+    return adv_grad, audio_grad

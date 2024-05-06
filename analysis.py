@@ -22,7 +22,7 @@ from tqdm import tqdm
 from src.tools.tools import get_default_device, eval_wer, eval_neg_seq_len
 from src.tools.args import core_args, attack_args, analysis_args
 from src.tools.saving import base_path_creator, attack_base_path_creator_eval, attack_base_path_creator_train
-from src.tools.analysis_tools import saliency
+from src.tools.analysis_tools import saliency, frame_level_saliency
 from src.models.load_model import load_model
 from src.data.load_data import load_data
 from src.attacker.selector import select_eval_attacker
@@ -44,6 +44,72 @@ if __name__ == "__main__":
     with open('CMDs/analysis.cmd', 'a') as f:
         f.write(' '.join(sys.argv)+'\n')
     
+    if analysis_args.saliency_plot:
+        '''
+            Plot frame-level saliency
+        '''
+        base_path = base_path_creator(core_args)
+        attack_base_path = attack_base_path_creator_eval(attack_args, base_path)
+        attack_hyp_file = f"{attack_base_path}/epoch-{attack_args.attack_epoch}_predictions.json"
+
+        # Get the device
+        if core_args.force_cpu:
+            device = torch.device('cpu')
+        else:
+            device = get_default_device(core_args.gpu_id)
+        print(device)
+
+        # load data
+        train_data, test_data = load_data(core_args)
+        if attack_args.eval_train:
+            test_data = train_data
+
+        # get indices of (un)/successful attack hyps
+        with open(attack_hyp_file, 'r') as f:
+            attack_hyps = json.load(f)
+        
+        inds = [i for i in range(len(attack_hyps)) if len(attack_hyps[i])==0]
+        success_data = [test_data[ind] for ind in inds]
+        success_sample = success_data[10]
+
+        inds = [i for i in range(len(attack_hyps)) if len(attack_hyps[i])!=0]
+        unsuccess_data = [test_data[ind] for ind in inds]
+        unsuccess_sample = unsuccess_data[1]
+
+        # Load the model
+        whisper_model = load_model(core_args, device=device)
+
+        # Load the attack model wrapper
+        attacker = select_eval_attacker(attack_args, core_args, whisper_model, device=device)
+        audio_attack_model = attacker.audio_attack_model
+        attack_model_dir = f'{attack_base_path_creator_train(attack_args, base_path)}/prepend_attack_models'
+        audio_attack_model.load_state_dict(torch.load(f'{attack_model_dir}/epoch{attack_args.attack_epoch}/model.th'))
+
+        # compute frame-level saliency
+        success_saliencies = frame_level_saliency(success_sample['audio'], audio_attack_model, whisper_model, device)
+        unsuccess_saliencies = frame_level_saliency(unsuccess_sample['audio'], audio_attack_model, whisper_model, device)
+
+        # plot
+        time_index = [i/SAMPLE_RATE for i in range(len(success_saliencies))]
+        plt.plot(time_index, success_saliencies)
+        plt.xlabel('Time')
+        plt.ylabel('Saliency')
+        plt.xlim((0,3))
+        plt.vlines(x=0.64, colors='red', ymin=0, ymax=max(success_saliencies), linestyles='dashed')
+        save_path = f'{attack_base_path}/success_saliency.png'
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.clf()
+
+        time_index = [i/SAMPLE_RATE for i in range(len(unsuccess_saliencies))]
+        plt.plot(time_index, unsuccess_saliencies)
+        plt.xlabel('Time')
+        plt.ylabel('Saliency')
+        plt.xlim((0,3))
+        plt.vlines(x=0.64, colors='red', ymin=0, ymax=max(unsuccess_saliencies), linestyles='dashed')
+        save_path = f'{attack_base_path}/unsuccess_saliency.png'
+        plt.savefig(save_path, bbox_inches='tight')
+        plt.clf()
+
 
     if analysis_args.saliency:
         '''
@@ -77,7 +143,7 @@ if __name__ == "__main__":
         
         inds = [i for i in range(len(attack_hyps)) if len(attack_hyps[i])==0]
         success_data = [test_data[ind] for ind in inds]
-
+        
         inds = [i for i in range(len(attack_hyps)) if len(attack_hyps[i])!=0]
         unsuccess_data = [test_data[ind] for ind in inds]
 

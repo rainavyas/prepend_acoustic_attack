@@ -48,7 +48,7 @@ def analysis_args():
     commandLineParser.add_argument('--attack_path', type=str, default='', help='path to predictions with attack')
 
     commandLineParser.add_argument('--saliency', action='store_true', help='Do saliency analysis. If you want to get saliency for a transfer attack - use attack transferability arguments and attack_path argument')
-
+    commandLineParser.add_argument('--saliency_plot', action='store_true', help='Plot frame-level saliency across the audio recording.')
 
 
 
