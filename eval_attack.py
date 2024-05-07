@@ -61,7 +61,7 @@ if __name__ == "__main__":
     else:
         attack_model_dir = attack_args.attack_model_dir
 
-    only_wer = False
+    only_wer = attack_args.only_wer
     if attack_args.attack_token == 'transcribe':
         only_wer = True
 

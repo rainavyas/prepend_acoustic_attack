@@ -29,11 +29,11 @@ class WhisperModel:
         self.tokenizer = get_tokenizer(self.model.is_multilingual, num_languages=self.model.num_languages, language=self.language, task=self.task)
 
     
-    def predict(self, audio='', initial_prompt=None):
+    def predict(self, audio='', initial_prompt=None, without_timestamps=False):
         '''
             Whisper decoder output here
         '''
-        result = self.model.transcribe(audio, language=self.language, task=self.task, initial_prompt=initial_prompt)
+        result = self.model.transcribe(audio, language=self.language, task=self.task, initial_prompt=initial_prompt, without_timestamps=without_timestamps)
         segments = []
         for segment in result['segments']:
             segments.append(segment['text'].strip())

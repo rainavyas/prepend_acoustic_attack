@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     # extract the audio attack vectors from pytorch and save as numpy array
 
-    attack_model = AudioAttackModelWrapper(None)
+    attack_model = AudioAttackModelWrapper(None, attack_size=10240)
     attack_model.load_state_dict(torch.load(f'{args.attack_model_path}'))
     audio = attack_model.audio_attack_segment.cpu().detach().numpy()
     np.save(args.save_path, audio)

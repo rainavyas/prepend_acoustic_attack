@@ -30,6 +30,8 @@ def attack_args():
     commandLineParser.add_argument('--force_run', action='store_true', help='Do not load from cache')
     commandLineParser.add_argument('--not_none', action='store_true', help='Do not evaluate the none attack')
     commandLineParser.add_argument('--eval_train', action='store_true', help='Evaluate attack on the train split')
+    commandLineParser.add_argument('--only_wer', action='store_true', help='Evaluate only the WER.')
+
 
 
     # eval attack args for attack transferability

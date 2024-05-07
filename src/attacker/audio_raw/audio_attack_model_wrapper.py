@@ -53,7 +53,8 @@ class AudioAttackModelWrapper(nn.Module):
     def transcribe(self,
         whisper_model,
         audio,
-        do_attack=True
+        do_attack=True,
+        without_timestamps=False
     ):
 
         '''
@@ -69,6 +70,6 @@ class AudioAttackModelWrapper(nn.Module):
             audio = torch.from_numpy(audio).to(self.device)
             audio = torch.cat((self.audio_attack_segment, audio), dim=0)
 
-        return whisper_model.predict(audio)
+        return whisper_model.predict(audio, without_timestamps=without_timestamps)
 
 
