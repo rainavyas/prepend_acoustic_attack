@@ -39,3 +39,18 @@ class WhisperModel:
             segments.append(segment['text'].strip())
         return ' '.join(segments)
 
+
+class WhisperModelEnsemble:
+    '''
+        Wrapper for Whisper ASR
+        Ensemble
+        Ensure all models are either multi-lingual or English only
+    '''
+    def __init__(self, model_names=['whisper-small'], device=torch.device('cpu'), task='transcribe', language='en'):
+        self.models = [whisper.load_model(MODEL_NAME_MAPPER[model_name], device=device, download_root=CACHE_DIR) for model_name in model_names]
+        self.task = task
+        self.language = language # source audio language
+        self.tokenizer = get_tokenizer(self.models[0].is_multilingual, num_languages=self.models[0].num_languages, language=self.language, task=self.task)
+
+
+

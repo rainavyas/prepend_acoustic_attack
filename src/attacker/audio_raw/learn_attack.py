@@ -15,8 +15,9 @@ class AudioAttack(AudioBaseAttacker):
     '''
        Prepend adversarial attack in audio space
     '''
-    def __init__(self, attack_args, whisper_model, device, lr=1e-3):
+    def __init__(self, attack_args, whisper_model, device, lr=1e-3, multiple_model_attack=False):
         AudioBaseAttacker.__init__(self, attack_args, whisper_model, device)
+        self.audio_attack_model.multiple_model_attack = multiple_model_attack
         self.optimizer = torch.optim.AdamW(self.audio_attack_model.parameters(), lr=lr, eps=1e-8)
 
 

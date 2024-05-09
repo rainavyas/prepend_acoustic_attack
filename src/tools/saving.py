@@ -4,7 +4,7 @@ def base_path_creator(core_args, create=True):
     path = '.'
     path = next_dir(path, 'experiments', create=create)
     path = next_dir(path, core_args.data_name, create=create)
-    path = next_dir(path, core_args.model_name, create=create)
+    path = next_dir(path, '_'.join(core_args.model_name), create=create)
     path = next_dir(path, core_args.task, create=create)
     path = next_dir(path, core_args.language, create=create)
     if core_args.seed != 1:

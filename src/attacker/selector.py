@@ -4,6 +4,9 @@ from .audio_raw.base import AudioBaseAttacker
 from .audio_raw.learn_attack import AudioAttack
 
 def select_eval_attacker(attack_args, core_args, model, device=None):
+    if len(core_args.model_name) > 1:
+        raise ValueError("Code is designed to only evaluate a single model")
+
     if attack_args.attack_method == 'mel':
         return MelBaseAttacker(attack_args, model, device)
     elif attack_args.attack_method == 'audio-raw':
@@ -14,5 +17,8 @@ def select_train_attacker(attack_args, core_args, model, word_list=None, device=
     if attack_args.attack_method == 'mel':
         return SoftPromptAttack(attack_args, model, device)
     elif attack_args.attack_method == 'audio-raw':
-        return AudioAttack(attack_args, model, device, lr=attack_args.lr)
+        multiple_model_attack = False
+        if len(core_args.model_name) > 1:
+            multiple_model_attack = True
+        return AudioAttack(attack_args, model, device, lr=attack_args.lr, multiple_model_attack=multiple_model_attack)
    

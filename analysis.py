@@ -43,7 +43,7 @@ if __name__ == "__main__":
         os.mkdir('CMDs')
     with open('CMDs/analysis.cmd', 'a') as f:
         f.write(' '.join(sys.argv)+'\n')
-    
+
     if analysis_args.saliency_plot:
         '''
             Plot frame-level saliency

@@ -12,6 +12,7 @@ class AudioAttackModelWrapper(nn.Module):
         self.audio_attack_segment = nn.Parameter(torch.rand(attack_size))
         self.tokenizer = tokenizer
         self.device = device
+        self.multiple_model_attack = False
     
     def forward(self, audio_vector, whisper_model):
         '''
@@ -34,7 +35,11 @@ class AudioAttackModelWrapper(nn.Module):
             audio: [Batch x Audio length]
             based on https://github.com/openai/whisper/blob/main/whisper/audio.py
         '''
-        padded_mel = log_mel_spectrogram(audio, whisper_model.model.dims.n_mels, padding=N_SAMPLES)
+        if self.multiple_model_attack:
+            n_mels = whisper_model.models[0].dims.n_mels
+        else:
+            n_mels = whisper_model.model.dims.n_mels
+        padded_mel = log_mel_spectrogram(audio, n_mels, padding=N_SAMPLES)
         mel = pad_or_trim(padded_mel, N_FRAMES)
         return mel
     
@@ -48,7 +53,15 @@ class AudioAttackModelWrapper(nn.Module):
         sot_ids = torch.tensor(self.tokenizer.sot_sequence_including_notimestamps)
         sot_ids = sot_ids.to(self.device)
         sot_ids = sot_ids.unsqueeze(0).expand(mel.size(0), -1)
-        return whisper_model.model.forward(mel, sot_ids)
+        if self.multiple_model_attack:
+            # pass through each target model
+            sf = nn.Softmax(dim=-1)
+            pred_probs = []
+            for model in whisper_model.models:
+                pred_probs.append(sf(model.forward(mel, sot_ids)))
+            return torch.mean(torch.stack(pred_probs), dim=0) 
+        else:
+            return whisper_model.model.forward(mel, sot_ids)
     
     def transcribe(self,
         whisper_model,

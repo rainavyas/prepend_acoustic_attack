@@ -2,7 +2,7 @@ import argparse
 
 def core_args():
     commandLineParser = argparse.ArgumentParser(allow_abbrev=False)
-    commandLineParser.add_argument('--model_name', type=str, default='whisper-small', help='ASR model')
+    commandLineParser.add_argument('--model_name', type=str, default='whisper-small', nargs='+', help='ASR model. Can pass multiple models if multiple models to be loaded')
     commandLineParser.add_argument('--task', type=str, default='transcribe', choices=['transcribe', 'translate'], help='Whisper task. N.b. translate is only X-en')
     commandLineParser.add_argument('--language', type=str, default='en', help='Source audio language')
     commandLineParser.add_argument('--gpu_id', type=int, default=0, help='select specific gpu')
