@@ -22,6 +22,8 @@ def attack_args():
     commandLineParser.add_argument('--bs', type=int, default=16, help='Batch size for training attack')
     commandLineParser.add_argument('--lr', type=float, default=1e-3, help='Adversarial Attack learning rate')
     commandLineParser.add_argument('--clip_val', type=float, default=-1, help='Value (maximum) to clip the log mel vectors. -1 means no clipping')
+    commandLineParser.add_argument('--attack_init', type=str, default='random', help='How to initialize attack. Give the path of a previously trained attack (model wrapper) if you want to initialize with it')
+
 
 
 

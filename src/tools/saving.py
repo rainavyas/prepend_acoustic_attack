@@ -11,24 +11,34 @@ def base_path_creator(core_args, create=True):
         path = next_dir(path, f'seed{core_args.seed}', create=create)
     return path
 
-def attack_base_path_creator_train(attack_args, path='.', create=True):
-    path = next_dir(path, 'attack_train', create=create)
+def create_attack_base_path(attack_args, path='.', mode='train', create=True):
+    # Choose the base directory based on mode
+    base_dir = 'attack_train' if mode == 'train' else 'attack_eval'
+    path = next_dir(path, base_dir, create=create)
+
+    # Common directory structure for both train and eval
     path = next_dir(path, attack_args.attack_method, create=create)
     if attack_args.attack_token != 'eot':
         path = next_dir(path, f'attack_token{attack_args.attack_token}', create=create)
+    if attack_args.attack_init != 'random':
+        attack_init_path_str = attack_args.attack_init
+        attack_init_path_str = '-'.join(attack_init_path_str.split('/'))
+        path = next_dir(path, f'attack_init_{attack_init_path_str}', create=create)
     path = next_dir(path, f'attack_size{attack_args.attack_size}', create=create)
     path = next_dir(path, f'clip_val{attack_args.clip_val}', create=create)
+
+    # Additional directory for eval mode
+    if mode == 'eval':
+        path = next_dir(path, f'attack-epoch{attack_args.attack_epoch}', create=create)
+    
     return path
 
+def attack_base_path_creator_train(attack_args, path='.', create=True):
+    return create_attack_base_path(attack_args, path, 'train', create)
+
 def attack_base_path_creator_eval(attack_args, path='.', create=True):
-    path = next_dir(path, 'attack_eval', create=create)
-    path = next_dir(path, attack_args.attack_method, create=create)
-    if attack_args.attack_token != 'eot':
-        path = next_dir(path, f'attack_token{attack_args.attack_token}', create=create)
-    path = next_dir(path, f'attack_size{attack_args.attack_size}', create=create)
-    path = next_dir(path, f'clip_val{attack_args.clip_val}', create=create)
-    path = next_dir(path, f'attack-epoch{attack_args.attack_epoch}', create=create)
-    return path
+    return create_attack_base_path(attack_args, path, 'eval', create)
+
 
 
 def next_dir(path, dir_name, create=True):

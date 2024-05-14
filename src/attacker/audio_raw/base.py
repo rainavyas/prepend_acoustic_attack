@@ -11,13 +11,13 @@ class AudioBaseAttacker():
     '''
         Base class for whitebox attack on Whisper Model in raw audio space
     '''
-    def __init__(self, attack_args, model, device):
+    def __init__(self, attack_args, model, device, attack_init='random'):
         self.attack_args = attack_args
         self.whisper_model = model
         self.device = device
 
         # model wrapper with audio attack segment prepending ability
-        self.audio_attack_model = AudioAttackModelWrapper(self.whisper_model.tokenizer, attack_size=attack_args.attack_size, device=device).to(device)
+        self.audio_attack_model = AudioAttackModelWrapper(self.whisper_model.tokenizer, attack_size=attack_args.attack_size, device=device, attack_init=attack_init).to(device)
 
     def _get_tgt_tkn_id(self):
         if self.attack_args.attack_token == 'eot':

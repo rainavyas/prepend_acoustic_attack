@@ -6,13 +6,23 @@ class AudioAttackModelWrapper(nn.Module):
     '''
         Whisper Model wrapper with learnable audio segment attack prepended to speech signals
     '''
-    def __init__(self, tokenizer, attack_size=5120, device=None):
+    def __init__(self, tokenizer, attack_size=5120, device=None, attack_init='random'):
         super(AudioAttackModelWrapper, self).__init__()
         self.attack_size = attack_size
-        self.audio_attack_segment = nn.Parameter(torch.rand(attack_size))
         self.tokenizer = tokenizer
         self.device = device
         self.multiple_model_attack = False
+
+        if attack_init == 'random':
+            self.audio_attack_segment = nn.Parameter(torch.rand(attack_size))
+        else:
+            # load init attack from attack_init path
+            loaded_params = torch.load(attack_init)
+            if 'audio_attack_segment' in loaded_params:
+                initial_value = loaded_params['audio_attack_segment']
+                self.audio_attack_segment = nn.Parameter(initial_value.to(device))
+            else:
+                raise ValueError("Invalid attack_init path provided.")
     
     def forward(self, audio_vector, whisper_model):
         '''

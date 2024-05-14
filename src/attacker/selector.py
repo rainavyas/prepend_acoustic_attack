@@ -10,7 +10,7 @@ def select_eval_attacker(attack_args, core_args, model, device=None):
     if attack_args.attack_method == 'mel':
         return MelBaseAttacker(attack_args, model, device)
     elif attack_args.attack_method == 'audio-raw':
-        return AudioBaseAttacker(attack_args, model, device)
+        return AudioBaseAttacker(attack_args, model, device, attack_init=attack_args.attack_init)
 
 
 def select_train_attacker(attack_args, core_args, model, word_list=None, device=None):
@@ -20,5 +20,5 @@ def select_train_attacker(attack_args, core_args, model, word_list=None, device=
         multiple_model_attack = False
         if len(core_args.model_name) > 1:
             multiple_model_attack = True
-        return AudioAttack(attack_args, model, device, lr=attack_args.lr, multiple_model_attack=multiple_model_attack)
+        return AudioAttack(attack_args, model, device, lr=attack_args.lr, multiple_model_attack=multiple_model_attack, attack_init=attack_args.attack_init)
    
