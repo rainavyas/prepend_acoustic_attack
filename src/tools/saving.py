@@ -18,6 +18,8 @@ def create_attack_base_path(attack_args, path='.', mode='train', create=True):
 
     # Common directory structure for both train and eval
     path = next_dir(path, attack_args.attack_method, create=create)
+    if attack_args.attack_command != 'mute':
+        path = next_dir(path, f'command_{attack_args.attack_command}', create=create)
     if attack_args.attack_token != 'eot':
         path = next_dir(path, f'attack_token{attack_args.attack_token}', create=create)
     if attack_args.attack_init != 'random':

@@ -16,6 +16,7 @@ def attack_args():
     # train attack args
     commandLineParser.add_argument('--attack_method', type=str, default='audio-raw', choices=['audio-raw', 'mel'], help='Adversarial attack approach for training')
     commandLineParser.add_argument('--attack_token', type=str, default='eot', choices=['eot', 'transcribe'], help='Which non-acoustic token are we learning an acoustic realization for.')
+    commandLineParser.add_argument('--attack_command', type=str, default='mute', choices=['mute', 'hallucinate'], help='Objective of attack - hidden universal command/control.')
     commandLineParser.add_argument('--max_epochs', type=int, default=20, help='Training epochs for attack')
     commandLineParser.add_argument('--save_freq', type=int, default=1, help='Epoch frequency for saving attack')
     commandLineParser.add_argument('--attack_size', type=int, default=5120, help='Length of attack segment')

@@ -13,6 +13,9 @@ class AudioAttackModelWrapper(nn.Module):
         self.device = device
         self.multiple_model_attack = False
 
+        self.sot_ids = self.tokenizer.sot_sequence_including_notimestamps
+        self.len_sot_ids = len(torch.tensor(self.sot_ids))
+
         if attack_init == 'random':
             self.audio_attack_segment = nn.Parameter(torch.rand(attack_size))
         else:
@@ -24,7 +27,7 @@ class AudioAttackModelWrapper(nn.Module):
             else:
                 raise ValueError("Invalid attack_init path provided.")
     
-    def forward(self, audio_vector, whisper_model):
+    def forward(self, audio_vector, whisper_model, decoder_input=None):
         '''
             audio_vector: Torch.tensor: [Batch x Audio Length]
             whisper_model: encoder-decoder model
@@ -37,7 +40,7 @@ class AudioAttackModelWrapper(nn.Module):
 
         # forward pass through full model
         mel = self._audio_to_mel(attacked_audio_vector, whisper_model)
-        return self._mel_to_logit(mel, whisper_model)
+        return self._mel_to_logit(mel, whisper_model, decoder_input=decoder_input)
     
 
     def _audio_to_mel(self, audio: torch.Tensor, whisper_model):
@@ -53,16 +56,21 @@ class AudioAttackModelWrapper(nn.Module):
         mel = pad_or_trim(padded_mel, N_FRAMES)
         return mel
     
-    def _mel_to_logit(self, mel: torch.Tensor, whisper_model):
+    def _mel_to_logit(self, mel: torch.Tensor, whisper_model, decoder_input=None):
         '''
             Forward pass through the whisper model of the mel vectors
             expect mel vectors passed as a batch and padded to 30s of audio length
             mel: torch.Tensor [B x dim x num_vectors]
         '''
         # create batch of start of transcript tokens
-        sot_ids = torch.tensor(self.tokenizer.sot_sequence_including_notimestamps)
+        sot_ids = torch.tensor(self.sot_ids)
         sot_ids = sot_ids.to(self.device)
-        sot_ids = sot_ids.unsqueeze(0).expand(mel.size(0), -1)
+        decoder_input_ids = sot_ids.unsqueeze(0).expand(mel.size(0), -1)
+        if decoder_input is not None:
+            decoder_input_ids = torch.cat((decoder_input_ids, decoder_input), dim=1)
+            # decoder_input_ids = decoder_input
+            pass
+
         if self.multiple_model_attack:
             # pass through each target model
             sf = nn.Softmax(dim=-1)
@@ -71,7 +79,7 @@ class AudioAttackModelWrapper(nn.Module):
                 pred_probs.append(sf(model.forward(mel, sot_ids)))
             return torch.mean(torch.stack(pred_probs), dim=0) 
         else:
-            return whisper_model.model.forward(mel, sot_ids)
+            return whisper_model.model.forward(mel, decoder_input_ids)
     
     def transcribe(self,
         whisper_model,

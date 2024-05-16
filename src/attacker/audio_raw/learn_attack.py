@@ -7,13 +7,13 @@ from tqdm import tqdm
 from whisper.audio import load_audio
 
 from .base import AudioBaseAttacker
-from src.tools.tools import set_seeds, AverageMeter
+from src.tools.tools import AverageMeter
 
 
 
 class AudioAttack(AudioBaseAttacker):
     '''
-       Prepend adversarial attack in audio space
+       Prepend adversarial attack in audio space -- designed to mute Whisper by maximizing eot token as first generated token
     '''
     def __init__(self, attack_args, whisper_model, device, lr=1e-3, multiple_model_attack=False, attack_init='random'):
         AudioBaseAttacker.__init__(self, attack_args, whisper_model, device, attack_init=attack_init)
@@ -44,11 +44,11 @@ class AudioAttack(AudioBaseAttacker):
         # switch to train mode
         self.audio_attack_model.train()
 
-        for i, (mels) in enumerate(train_loader):
-            mels = mels[0].to(self.device)
+        for i, (audio) in enumerate(train_loader):
+            audio = audio[0].to(self.device)
 
             # Forward pass
-            logits = self.audio_attack_model(mels, self.whisper_model)[:,-1,:].squeeze(dim=1)
+            logits = self.audio_attack_model(audio, self.whisper_model)[:,-1,:].squeeze(dim=1)
             loss = self._loss(logits)
 
             # Backward pass and update
@@ -64,7 +64,7 @@ class AudioAttack(AudioBaseAttacker):
                 self.audio_attack_model.audio_attack_segment.clamp_(min=-1*max_val, max=max_val)
         
             # record loss
-            losses.update(loss.item(), mels.size(0))
+            losses.update(loss.item(), audio.size(0))
             if i % print_freq == 0:
                 print(f'Epoch: [{epoch}][{i}/{len(train_loader)}]\tLoss {losses.val:.5f} ({losses.avg:.5f})')        
 
@@ -98,7 +98,6 @@ class AudioAttack(AudioBaseAttacker):
 
 
     def train_process(self, train_data, cache_dir):
-        set_seeds(1)
 
         fpath = f'{cache_dir}/prepend_attack_models'
         if not os.path.isdir(fpath):
