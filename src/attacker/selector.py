@@ -3,6 +3,7 @@ from .mel.base import MelBaseAttacker
 from .audio_raw.base import AudioBaseAttacker
 from .audio_raw.learn_attack import AudioAttack
 from .audio_raw.learn_attack_hallucinate import AudioAttackHallucinate
+from .audio_raw.learn_attack_translate import AudioAttackTranslate
 
 def select_eval_attacker(attack_args, core_args, model, device=None):
     if len(core_args.model_name) > 1:
@@ -25,5 +26,7 @@ def select_train_attacker(attack_args, core_args, model, word_list=None, device=
             return AudioAttack(attack_args, model, device, lr=attack_args.lr, multiple_model_attack=multiple_model_attack, attack_init=attack_args.attack_init)
         elif attack_args.attack_command == 'hallucinate':
             return AudioAttackHallucinate(attack_args, model, device, lr=attack_args.lr, multiple_model_attack=multiple_model_attack, attack_init=attack_args.attack_init)
+        elif attack_args.attack_command == 'translate':
+            return AudioAttackTranslate(attack_args, model, device, lr=attack_args.lr, multiple_model_attack=multiple_model_attack, attack_init=attack_args.attack_init)
 
    

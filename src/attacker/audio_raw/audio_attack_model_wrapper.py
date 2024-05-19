@@ -68,15 +68,13 @@ class AudioAttackModelWrapper(nn.Module):
         decoder_input_ids = sot_ids.unsqueeze(0).expand(mel.size(0), -1)
         if decoder_input is not None:
             decoder_input_ids = torch.cat((decoder_input_ids, decoder_input), dim=1)
-            # decoder_input_ids = decoder_input
-            pass
 
         if self.multiple_model_attack:
             # pass through each target model
             sf = nn.Softmax(dim=-1)
             pred_probs = []
             for model in whisper_model.models:
-                pred_probs.append(sf(model.forward(mel, sot_ids)))
+                pred_probs.append(sf(model.forward(mel, decoder_input_ids)))
             return torch.mean(torch.stack(pred_probs), dim=0) 
         else:
             return whisper_model.model.forward(mel, decoder_input_ids)

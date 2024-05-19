@@ -124,27 +124,6 @@ class AudioAttackHallucinate(AudioAttack):
         return dl
 
 
-    def train_process(self, train_data, cache_dir):
-        set_seeds(1)
-
-        fpath = f'{cache_dir}/prepend_attack_models'
-        if not os.path.isdir(fpath):
-            os.mkdir(fpath)
-
-        train_dl = self._prep_dl(train_data, bs=self.attack_args.bs, shuffle=True)
-
-        for epoch in range(self.attack_args.max_epochs):
-            # train for one epoch
-            print('current lr {:.5e}'.format(self.optimizer.param_groups[0]['lr']))
-            self.train_step(train_dl, epoch)
-
-            if epoch==self.attack_args.max_epochs-1 or (epoch+1)%self.attack_args.save_freq==0:
-                # save model at this epoch
-                if not os.path.isdir(f'{fpath}/epoch{epoch+1}'):
-                    os.mkdir(f'{fpath}/epoch{epoch+1}')
-                state = self.audio_attack_model.state_dict()
-                torch.save(state, f'{fpath}/epoch{epoch+1}/model.th')
-
 
 
 

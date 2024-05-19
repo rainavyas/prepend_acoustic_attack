@@ -25,7 +25,7 @@ class WhisperModel:
     def __init__(self, model_name='whisper-small', device=torch.device('cpu'), task='transcribe', language='en'):
         self.model = whisper.load_model(MODEL_NAME_MAPPER[model_name], device=device, download_root=CACHE_DIR)
         self.task = task
-        self.language = language # source audio language
+        self.language = language.split('_')[0] # source audio language
         self.tokenizer = get_tokenizer(self.model.is_multilingual, num_languages=self.model.num_languages, language=self.language, task=self.task)
 
     
