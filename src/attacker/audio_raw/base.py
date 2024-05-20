@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 
 
-from src.tools.tools import eval_neg_seq_len, eval_frac_0_samples, eval_wer
+from src.tools.tools import eval_neg_seq_len, eval_frac_0_samples, eval_wer, eval_average_fraction_of_languages
 from .audio_attack_model_wrapper import AudioAttackModelWrapper
 
 class AudioBaseAttacker():
@@ -25,12 +25,26 @@ class AudioBaseAttacker():
         elif self.attack_args.attack_token == 'transcribe':
             return self.whisper_model.tokenizer.transcribe
 
-    def eval_uni_attack(self, data, attack_model_dir=None, attack_epoch=-1, cache_dir=None, force_run=False, only_wer=False):
+    def evaluate_metrics(self, hyps, refs, metrics, frac_lang_languages):
+        results = {}
+        if 'nsl' in metrics:
+            results['Negative Sequence Length'] = eval_neg_seq_len(hyps)
+        if 'frac0' in metrics:
+            results['Fraction 0 length'] = eval_frac_0_samples(hyps)
+        if 'wer' in metrics:
+            results['WER'] = eval_wer(hyps, refs)
+        if 'frac_lang' in metrics:
+            results['Fraction of Languages'] = eval_average_fraction_of_languages(hyps, frac_lang_languages)
+        return results
+
+    def eval_uni_attack(self, data, attack_model_dir=None, attack_epoch=-1, cache_dir=None, force_run=False, metrics=['nsl', 'frac0'], frac_lang_languages=['en', 'fr']):
         '''
             Generates transcriptions with audio attack segment (saves to cache)
-            Computes the (negative average sequence length) = -1*mean(len(prediction))
-
-            Computes only WER if only_wer
+            Computes the metrics specified
+                nsl : negative sequence length (average)
+                frac0 : fraction of samples that are 0
+                wer: Word Error Rate
+                frac_lang: fraction of specified languages (average over hyps)
 
             audio_attack_model is the directory with the saved audio_attack_model checkpoints with the attack audio values
             attack_epoch indicates the checkpoint of the learnt attack from training that should be used
@@ -41,12 +55,8 @@ class AudioBaseAttacker():
         if os.path.isfile(fpath) and not force_run:
             with open(fpath, 'r') as f:
                 hyps = json.load(f)
-            if only_wer:
-                refs = [d['ref'] for d in data]
-                return {'WER': eval_wer(hyps, refs)}
-            nsl, frac0 = eval_neg_seq_len(hyps), eval_frac_0_samples(hyps)
-            out = {'Negative Sequence Length': nsl, 'Fraction 0 length': frac0}
-            return out
+            refs = [d['ref'] for d in data]
+            return self.evaluate_metrics(hyps, refs, metrics, frac_lang_languages)
         
         # no cache
         if attack_epoch == -1:
@@ -63,12 +73,8 @@ class AudioBaseAttacker():
                 hyp = self.audio_attack_model.transcribe(self.whisper_model, sample['audio'], do_attack=do_attack)
             hyps.append(hyp)
 
-        if only_wer:
-            refs = [d['ref'] for d in data]
-            out =  {'WER': eval_wer(hyps, refs)}
-        else:
-            nsl, frac0 = eval_neg_seq_len(hyps), eval_frac_0_samples(hyps)
-            out = {'Negative Sequence Length': nsl, 'Fraction 0 length': frac0}
+        refs = [d['ref'] for d in data]
+        out = self.evaluate_metrics(hyps, refs, metrics, frac_lang_languages)
 
         if cache_dir is not None:
             with open(fpath, 'w') as f:
