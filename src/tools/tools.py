@@ -28,12 +28,19 @@ def eval_wer(hyps, refs, get_details=False):
     hyps = [std(hyp) for hyp in hyps]
     refs = [std(ref) for ref in refs]
     out = jiwer.process_words(refs, hyps)
+    
+    total_ref = sum(len(ref.split()) for ref in refs)  # total number of words in the reference
+    
     if not get_details:
         return out.wer
     else:
         # return ins, del and sub rates
-        total = out.insertions + out.deletions + out.substitutions + out.hits
-        return {'WER':out.wer, 'INS':out.insertions/total, 'DEL':out.deletions/total, 'SUB':out.substitutions/total, 'HIT':out.hits/total}
+        ins_rate = out.insertions / total_ref
+        del_rate = out.deletions / total_ref
+        sub_rate = out.substitutions / total_ref
+        return {'WER': out.wer, 'INS': ins_rate, 'DEL': del_rate, 'SUB': sub_rate, 'HIT': out.hits/total_ref}
+
+
 
 
 def eval_neg_seq_len(hyps):
