@@ -15,17 +15,17 @@ from whisper.audio import (
     pad_or_trim,
     load_audio
 )
-from math import log
 from statistics import mean, stdev
 from tqdm import tqdm
 
 from src.tools.tools import get_default_device, eval_wer, eval_neg_seq_len
 from src.tools.args import core_args, attack_args, analysis_args
 from src.tools.saving import base_path_creator, attack_base_path_creator_eval, attack_base_path_creator_train
-from src.tools.analysis_tools import saliency, frame_level_saliency
+from src.tools.analysis_tools import saliency, frame_level_saliency, get_decoder_proj_mat, get_rel_pos
 from src.models.load_model import load_model
 from src.data.load_data import load_data
 from src.attacker.selector import select_eval_attacker
+
 
 if __name__ == "__main__":
 
@@ -43,6 +43,99 @@ if __name__ == "__main__":
         os.mkdir('CMDs')
     with open('CMDs/analysis.cmd', 'a') as f:
         f.write(' '.join(sys.argv)+'\n')
+
+
+    if analysis_args.model_emb_close_exs:
+        '''
+            Print 10 closest words as per the projection matrix (same as embedding matrix)
+            for the selected tokens
+        '''
+
+        def print_closest_words(rel_pos, tokenizer, words, top_n=10):
+            for word in words:
+                word_id = tokenizer.encode(word, disallowed_special=())[0]
+                closest_ids = torch.argsort(-rel_pos[word_id])[:top_n+1]  # +1 to account for the word itself
+                closest_words = [tokenizer.decode([i]) for i in closest_ids if i != word_id]
+                print(f'The {top_n} closest words to "{word}": {closest_words[:top_n]}')
+
+        # Get the device
+        if core_args.force_cpu:
+            device = torch.device('cpu')
+        else:
+            device = get_default_device(core_args.gpu_id)
+        print(device)
+
+        # Load the model
+        whisper_model = load_model(core_args, device=device)
+        model = whisper_model.model
+
+        # Get projection matrix
+        W = get_decoder_proj_mat(model)
+
+        # Get relative position vector for each token
+        rel_pos = get_rel_pos(W)
+
+        # Define the words of interest
+        words_of_interest = ['zoo', 'boy', 'hi']
+
+        # Add the EOT token to the list of words of interest
+        eot_token = whisper_model.tokenizer.eot
+        eot_word = whisper_model.tokenizer.decode([eot_token])
+        words_of_interest.append(eot_word)
+
+        # Print the 10 closest words for each word of interest
+        print_closest_words(rel_pos, whisper_model.tokenizer, words_of_interest, top_n=10)
+        
+
+    if analysis_args.model_transfer_check:
+        '''
+            Determine if a muting adversarial attack can transfer between two models.
+
+            Compute the relative position of the eot token relative to other tokens using the projection matrix in the final layer of the decoder.
+        '''
+
+    
+        # Get the device
+        if core_args.force_cpu:
+            device = torch.device('cpu')
+        else:
+            device = get_default_device(core_args.gpu_id)
+        print(device)
+
+        # Load the two models (m and n)
+        whisper_model = load_model(core_args, device=device)
+        model_m = whisper_model.models[0]
+        model_n = whisper_model.models[1]
+
+        # get projection matrics
+        W_m = get_decoder_proj_mat(model_m)
+        W_n = get_decoder_proj_mat(model_n)
+
+        # get relative position vector for each token
+        rel_pos_m = get_rel_pos(W_m)
+        rel_pos_n = get_rel_pos(W_n)
+
+        # measure change (score) in rel_pos across the different models
+        diff = torch.linalg.norm(rel_pos_m - rel_pos_n, dim=1)
+
+        # get the score for the target eot token
+        eot_id = whisper_model.tokenizer.eot
+        eot_score = diff[eot_id].item()
+        print('EOT score:', eot_score)
+
+        # get the avg score + 2*std for the remaining other token ids
+        remaining_ids = [i for i in range(diff.shape[0]) if i != eot_id]
+        remaining_scores = diff[remaining_ids]
+
+        # Calculate mean and standard deviation
+        mean_score = remaining_scores.mean().item()
+        std_score = remaining_scores.std().item()
+
+        # # Calculate the desired score
+        # avg_plus_2std = mean_score + 2 * std_score
+
+        print(f'Other tokens score:\t{mean_score} +- {std_score}')
+
 
     if analysis_args.saliency_plot:
         '''

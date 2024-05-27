@@ -178,5 +178,13 @@ def analysis_args():
         action="store_true",
         help="Plot frame-level saliency across the audio recording.",
     )
+    commandLineParser.add_argument(
+        "--model_transfer_check", action="store_true", help="Determine if its possible for a muting attack is to transfer between different target models (passed in core_args.model_names)"
+    )
+
+    commandLineParser.add_argument(
+        "--model_emb_close_exs", action="store_true", help="Print the 10 closest words for target tokens as per the embedding matrix.)"
+    )
+
 
     return commandLineParser.parse_known_args()

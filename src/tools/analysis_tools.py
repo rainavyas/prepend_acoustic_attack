@@ -51,3 +51,30 @@ def _saliency_calculation(audio, audio_attack_model, whisper_model, device):
     audio_grad = audio.grad
 
     return adv_grad, audio_grad
+
+
+def get_decoder_proj_mat(whisper_model):
+    '''
+    Extract the final projection matrix used in the Whisper decoder to obtain the logits
+
+    N.B. this projection matrix is the same as the token id to embedding matrix used in the input to the decoder
+        This is standard for the Transformer decoder (refer to the attention is all you need paper)
+
+    Should return W: Tensor [V x k]
+        V = vocabulary size
+        k = embedding size
+    '''
+    W = whisper_model.decoder.token_embedding.weight
+    return W
+
+def get_rel_pos(W):
+    '''
+        Return the similarity of each row vector (normalized) with every other row vector
+
+        W: Tensor [V x k]
+
+        Return W^TW: Tensor [V x V]
+    '''
+    W_norm = W / W.norm(dim=1, keepdim=True)
+    # Return the similarity matrix
+    return torch.matmul(W_norm, W_norm.T)
