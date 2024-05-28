@@ -1,5 +1,6 @@
 import torch
 from whisper.audio import load_audio
+import string
 
 def saliency(audio, audio_attack_model, whisper_model, device):
     '''
@@ -67,14 +68,47 @@ def get_decoder_proj_mat(whisper_model):
     W = whisper_model.decoder.token_embedding.weight
     return W
 
-def get_rel_pos(W):
+def get_rel_pos(W, real_token_ids, device=torch.device('cpu')):
     '''
-        Return the similarity of each row vector (normalized) with every other row vector
+    Return the similarity of each row vector (normalized) with every other row vector,
+    where each row (r) vector is the rel_pos_vector for target token r.
 
-        W: Tensor [V x k]
+    W: Tensor [V x k]
+    real_token_ids: List[int] - List of real acoustic token ids
 
-        Return W^TW: Tensor [V x V]
+    Return rel_pos_matrix: Tensor [V x V]
     '''
+    V = W.shape[0]
     W_norm = W / W.norm(dim=1, keepdim=True)
-    # Return the similarity matrix
-    return torch.matmul(W_norm, W_norm.T)
+
+    # Compute the dot product for all tokens
+    rel_pos_matrix = torch.matmul(W_norm, W_norm.T).cpu()
+
+    # Zero out the columns that are not part of the real acoustic token ids
+    mask = torch.zeros(V, V)
+    mask[:, real_token_ids] = 1
+    rel_pos_matrix = rel_pos_matrix * mask
+
+    return rel_pos_matrix
+
+
+def get_real_acoustic_token_ids(tokenizer, vocab_size):
+    '''
+    Identify real acoustic token ids based on the criteria that the token begins with a
+    letter in the English alphabet or a numeral 1-9.
+
+    tokenizer: Tokenizer object
+    vocab_size: int - The size of the vocabulary
+
+    Return real_token_ids: List[int]
+    '''
+    real_token_ids = []
+    for token_id in range(vocab_size):
+        token = tokenizer.decode([token_id])
+        if token and is_real_acoustic_token(token):
+            real_token_ids.append(token_id)
+    return real_token_ids
+
+def is_real_acoustic_token(token):
+    ''' Check if the token begins with a letter in the English alphabet or a numeral 1-9. '''
+    return token[0] in string.ascii_letters or token[0] in '123456789'

@@ -21,7 +21,7 @@ from tqdm import tqdm
 from src.tools.tools import get_default_device, eval_wer, eval_neg_seq_len
 from src.tools.args import core_args, attack_args, analysis_args
 from src.tools.saving import base_path_creator, attack_base_path_creator_eval, attack_base_path_creator_train
-from src.tools.analysis_tools import saliency, frame_level_saliency, get_decoder_proj_mat, get_rel_pos
+from src.tools.analysis_tools import saliency, frame_level_saliency, get_decoder_proj_mat, get_rel_pos, get_real_acoustic_token_ids
 from src.models.load_model import load_model
 from src.data.load_data import load_data
 from src.attacker.selector import select_eval_attacker
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         print(device)
 
         # Load the two models (m and n)
-        whisper_model = load_model(core_args, device=device)
+        whisper_model = load_model(core_args)
         model_m = whisper_model.models[0]
         model_n = whisper_model.models[1]
 
@@ -111,9 +111,10 @@ if __name__ == "__main__":
         W_m = get_decoder_proj_mat(model_m)
         W_n = get_decoder_proj_mat(model_n)
 
-        # get relative position vector for each token
-        rel_pos_m = get_rel_pos(W_m)
-        rel_pos_n = get_rel_pos(W_n)
+        # get relative position vector for each token wrt to real acoustic sounding tokens
+        real_token_ids = get_real_acoustic_token_ids(whisper_model.tokenizer, vocab_size=W_m.size(0))
+        rel_pos_m = get_rel_pos(W_m, real_token_ids)
+        rel_pos_n = get_rel_pos(W_n, real_token_ids)
 
         # measure change (score) in rel_pos across the different models
         diff = torch.linalg.norm(rel_pos_m - rel_pos_n, dim=1)
@@ -123,18 +124,14 @@ if __name__ == "__main__":
         eot_score = diff[eot_id].item()
         print('EOT score:', eot_score)
 
-        # get the avg score + 2*std for the remaining other token ids
-        remaining_ids = [i for i in range(diff.shape[0]) if i != eot_id]
-        remaining_scores = diff[remaining_ids]
+        # Get the avg score + 2*std for the real token ids
+        real_token_scores = diff[real_token_ids]
 
         # Calculate mean and standard deviation
-        mean_score = remaining_scores.mean().item()
-        std_score = remaining_scores.std().item()
+        mean_score = real_token_scores.mean().item()
+        std_score = real_token_scores.std().item()
 
-        # # Calculate the desired score
-        # avg_plus_2std = mean_score + 2 * std_score
-
-        print(f'Other tokens score:\t{mean_score} +- {std_score}')
+        print(f'Real tokens score:\t{mean_score} +- {std_score}')
 
 
     if analysis_args.saliency_plot:
