@@ -32,6 +32,9 @@ def core_args():
         default="librispeech",
         help="dataset for exps; for flores: flores-english-french",
     )
+    commandLineParser.add_argument(
+        "--use_pred_for_ref", action="store_true", help="Implemented for Fleurs dataset. Use model predictions for the reference transcriptions."
+    )
     commandLineParser.add_argument("--seed", type=int, default=1, help="select seed")
     commandLineParser.add_argument(
         "--force_cpu", action="store_true", help="force cpu use"

@@ -72,8 +72,9 @@ if __name__ == "__main__":
         # Get projection matrix
         W = get_decoder_proj_mat(model)
 
-        # Get relative position vector for each token
-        rel_pos = get_rel_pos(W)
+        # Get relative position vector for each token wrt to real acoustic sounding tokens
+        real_token_ids = get_real_acoustic_token_ids(whisper_model.tokenizer, vocab_size=W.size(0))
+        rel_pos = get_rel_pos(W, real_token_ids)
 
         # Define the words of interest
         words_of_interest = ['zoo', 'boy', 'hi']
@@ -107,7 +108,7 @@ if __name__ == "__main__":
         model_m = whisper_model.models[0]
         model_n = whisper_model.models[1]
 
-        # get projection matrics
+        # get projection matrices
         W_m = get_decoder_proj_mat(model_m)
         W_n = get_decoder_proj_mat(model_n)
 

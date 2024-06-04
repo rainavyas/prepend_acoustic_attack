@@ -12,7 +12,7 @@ def load_data(core_args):
                     }
     '''
     if core_args.data_name == 'fleurs':
-        return _fleurs(lang=core_args.language)
+        return _fleurs(lang=core_args.language, use_pred_for_ref=core_args.use_pred_for_ref, model_name=core_args.model_name, gpu_id=core_args.gpu_id)
 
     if core_args.data_name == 'tedlium':
         return None, _tedlium()
