@@ -1,5 +1,6 @@
 from .speech import _librispeech, _tedlium, _mgb, _artie
 from .fleurs import _fleurs
+from src.tools.tools import get_default_device
 
 
 def load_data(core_args):
@@ -12,7 +13,8 @@ def load_data(core_args):
                     }
     '''
     if core_args.data_name == 'fleurs':
-        return _fleurs(lang=core_args.language, use_pred_for_ref=core_args.use_pred_for_ref, model_name=core_args.model_name, gpu_id=core_args.gpu_id)
+        device = get_default_device(core_args.gpu_id)
+        return _fleurs(lang=core_args.language, use_pred_for_ref=core_args.use_pred_for_ref, model_name=core_args.model_name[0], device=device)
 
     if core_args.data_name == 'tedlium':
         return None, _tedlium()

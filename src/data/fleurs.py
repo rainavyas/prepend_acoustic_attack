@@ -2,7 +2,6 @@ import os
 import json
 from datasets import load_dataset
 from src.models.whisper import WhisperModel
-from src.tools.tools import get_default_device
 from tqdm import tqdm
 
 LANG_MAPPER = {
@@ -15,7 +14,7 @@ LANG_MAPPER = {
 
 CACHE_DIR = "data/fleurs"
 
-def _fleurs(lang='fr', use_pred_for_ref=False, model_name=None, gpu_id=0):
+def _fleurs(lang='fr', use_pred_for_ref=False, model_name=None, device=None):
     """
     Loads the FLEURS dataset for a given language or language pair.
 
@@ -29,7 +28,6 @@ def _fleurs(lang='fr', use_pred_for_ref=False, model_name=None, gpu_id=0):
         tuple: Parallel training and test samples if a language pair is specified,
                otherwise training and test samples for the specified language.
     """
-    device = get_default_device(gpu_id)
     if '_' in lang:
         return _fleurs_parallel(lang, use_pred_for_ref, model_name, device)
     else:
