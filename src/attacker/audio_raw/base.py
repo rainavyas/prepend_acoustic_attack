@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 
 
-from src.tools.tools import eval_neg_seq_len, eval_frac_0_samples, eval_wer, eval_average_fraction_of_languages
+from src.tools.tools import eval_neg_seq_len, eval_frac_0_samples, eval_wer, eval_average_fraction_of_languages, eval_bleu, eval_bleu_dist, eval_comet, eval_comet_dist, eval_english_probability, eval_english_probability_dist, eval_bleu_english_prob_recall, eval_comet_english_prob_recall
 from .audio_attack_model_wrapper import AudioAttackModelWrapper
 
 class AudioBaseAttacker():
@@ -25,7 +25,8 @@ class AudioBaseAttacker():
         elif self.attack_args.attack_token == 'transcribe':
             return self.whisper_model.tokenizer.transcribe
 
-    def evaluate_metrics(self, hyps, refs, metrics, frac_lang_languages):
+    def evaluate_metrics(self, hyps, refs_data, metrics, frac_lang_languages, attack=False):
+        refs = [d['ref'] for d in refs_data]
         results = {}
         if 'nsl' in metrics:
             results['Negative Sequence Length'] = eval_neg_seq_len(hyps)
@@ -35,6 +36,33 @@ class AudioBaseAttacker():
             results['WER'] = eval_wer(hyps, refs)
         if 'frac_lang' in metrics:
             results['Fraction of Languages'] = eval_average_fraction_of_languages(hyps, frac_lang_languages)
+        if 'bleu' in metrics:
+            results['BLEU'] = eval_bleu(hyps, refs)
+        if 'bleu_dist' in metrics:
+            _ = eval_bleu_dist(hyps, refs, attack=attack)
+            print('BLEU dist files generated in experiments/plots/')
+        if 'comet' in metrics:
+            srcs = [d['ref_src'] for d in refs_data]
+            results['COMET'] = eval_comet(srcs, hyps, refs)
+        if 'comet_dist' in metrics:
+            srcs = [d['ref_src'] for d in refs_data]
+            _ = eval_comet_dist(srcs, hyps, refs, attack=attack)
+            print('COMET dist files generated in experiments/plots/')
+        if 'en_prob' in metrics:
+            results['Prob en'] = eval_english_probability(hyps)
+        if 'en_prob_dist' in metrics:
+            _ = eval_english_probability_dist(hyps, attack=attack)
+            print('prob(en) dist files generated in experiments/plots/')
+        if 'bleu_en_prob_recall' in metrics:
+            _ = eval_bleu_english_prob_recall(hyps, refs, attack=attack)
+            _ = eval_bleu_english_prob_recall(hyps, refs, attack=attack, rev_attack=True)
+            print('bleu recall generated in experiments/plots/')
+        if 'comet_en_prob_recall' in metrics:
+            srcs = [d['ref_src'] for d in refs_data]
+            _ = eval_comet_english_prob_recall(srcs, hyps, refs, attack=attack)
+            _ = eval_comet_english_prob_recall(srcs, hyps, refs, attack=attack, rev_attack=True)
+            print('comet recall generated in experiments/plots/')
+
         return results
 
     def eval_uni_attack(self, data, attack_model_dir=None, attack_epoch=-1, cache_dir=None, force_run=False, metrics=['nsl', 'frac0'], frac_lang_languages=['en', 'fr']):
@@ -55,8 +83,7 @@ class AudioBaseAttacker():
         if os.path.isfile(fpath) and not force_run:
             with open(fpath, 'r') as f:
                 hyps = json.load(f)
-            refs = [d['ref'] for d in data]
-            return self.evaluate_metrics(hyps, refs, metrics, frac_lang_languages)
+            return self.evaluate_metrics(hyps, data, metrics, frac_lang_languages, attack=attack_epoch!=-1)
         
         # no cache
         if attack_epoch == -1:
@@ -72,9 +99,7 @@ class AudioBaseAttacker():
             with torch.no_grad():
                 hyp = self.audio_attack_model.transcribe(self.whisper_model, sample['audio'], do_attack=do_attack)
             hyps.append(hyp)
-
-        refs = [d['ref'] for d in data]
-        out = self.evaluate_metrics(hyps, refs, metrics, frac_lang_languages)
+        out = self.evaluate_metrics(hyps, data, metrics, frac_lang_languages)
 
         if cache_dir is not None:
             with open(fpath, 'w') as f:

@@ -32,7 +32,7 @@ class AudioAttackModelWrapper(nn.Module):
             audio_vector: Torch.tensor: [Batch x Audio Length]
             whisper_model: encoder-decoder model
 
-            Returns the logits for the first transcribed token
+            Returns the logits
         '''
         # prepend attack segment
         X = self.audio_attack_segment.unsqueeze(0).expand(audio_vector.size(0), -1)
