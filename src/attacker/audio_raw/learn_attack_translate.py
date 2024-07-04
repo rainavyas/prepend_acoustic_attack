@@ -50,8 +50,6 @@ class AudioAttackTranslate(AudioAttackHallucinate):
         # Flatten logits and targets for cross-entropy
         batch_size, max_len_sequence = input_ids.size()
         vocab_size = logits.size(-1)
-
-        # breakpoint()
         
         # Create a mask based on sequence lengths
         mask = torch.arange(max_len_sequence, device=self.device).expand(batch_size, max_len_sequence) < seq_len.unsqueeze(1)

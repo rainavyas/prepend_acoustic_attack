@@ -13,7 +13,7 @@ from src.tools.tools import set_seeds, AverageMeter
 
 class AudioAttackHallucinate(AudioAttack):
     '''
-       Prepend adversarial attack in audio space -- designed to make Whisper by minimizing eot token prediction
+       Prepend adversarial attack in audio space -- designed to make Whisper hallucinate by minimizing eot token prediction
     '''
     def __init__(self, attack_args, whisper_model, device, lr=1e-3, multiple_model_attack=False, attack_init='random'):
         AudioAttack.__init__(self, attack_args, whisper_model, device, lr=lr, multiple_model_attack=multiple_model_attack, attack_init=attack_init)
@@ -109,7 +109,10 @@ class AudioAttackHallucinate(AudioAttack):
         text_lengths = []
         print('text tokenization')
         for text in tqdm(texts):
-            token_ids = self.whisper_model.tokenizer.encode(text)[:self.max_length]  # Truncate
+            if self.whisper_model.model_name == 'canary':
+                token_ids = self.whisper_model.tokenizer.text_to_ids(text, 'en')[:self.max_length] # assuming reference text is English
+            else:
+                token_ids = self.whisper_model.tokenizer.encode(text)[:self.max_length]  
             text_lengths.append(len(token_ids))  # Original length before padding
             if len(token_ids) < self.max_length:
                 token_ids.extend([0] * (self.max_length - len(token_ids)))  # Pad

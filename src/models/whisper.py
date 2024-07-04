@@ -23,6 +23,7 @@ class WhisperModel:
         Wrapper for Whisper ASR Transcription
     '''
     def __init__(self, model_name='whisper-small', device=torch.device('cpu'), task='transcribe', language='en'):
+        self.model_name = model_name
         self.model = whisper.load_model(MODEL_NAME_MAPPER[model_name], device=device, download_root=CACHE_DIR)
         self.task = task
         self.language = language.split('_')[0] # source audio language

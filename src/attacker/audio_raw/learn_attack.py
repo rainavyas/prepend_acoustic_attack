@@ -28,7 +28,6 @@ class AudioAttack(AudioBaseAttacker):
         logits: Torch.tensor [batch x vocab_size]
         '''
         tgt_id = self._get_tgt_tkn_id()
-
         sf = nn.Softmax(dim=1)
         log_probs = torch.log(sf(logits))
         tgt_probs = log_probs[:,tgt_id].squeeze()
@@ -54,6 +53,7 @@ class AudioAttack(AudioBaseAttacker):
             # Backward pass and update
             self.optimizer.zero_grad()
             loss.backward()
+            # print(self.audio_attack_model.audio_attack_segment.grad)
             self.optimizer.step()
 
             if self.attack_args.clip_val != -1:

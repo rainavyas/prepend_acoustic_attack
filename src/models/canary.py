@@ -7,13 +7,14 @@ os.environ['NEMO_CACHE_DIR'] = '/home/vr313/rds/rds-altaslp-8YSp2LXTlkY/data/cac
 
 class CanaryModel:
     def __init__(self, device=torch.device('cpu'), task='transcribe', language='en', pnc=True):
+        self.model_name = 'canary'
         self.model = EncDecMultiTaskModel.from_pretrained('nvidia/canary-1b').to(device)
         self.tokenizer = self.model.tokenizer
         self.taskname = 'asr' if task == 'transcribe' else 's2t_translation'
         self.task = task
         if task == 'transcribe':
-            self.src_lang = language
-            self.tgt_lang = language
+            self.src_lang = language.split('_')[0]
+            self.tgt_lang = self.src_lang
         else:
             self.src_lang = language.split('_')[0]
             self.tgt_lang = language.split('_')[1]
@@ -66,12 +67,12 @@ class CanaryModel:
         
         return manifest_path
 
-    def predict(self, audio_path):
+    def predict(self, audio='', **kwargs):
         '''
             Run through Canary model
         '''
         # Create input manifest file
-        manifest_path = self.create_manifest(audio_path)
+        manifest_path = self.create_manifest(audio)
         
         # Pass through Canary model
         predicted_text = self.model.transcribe(

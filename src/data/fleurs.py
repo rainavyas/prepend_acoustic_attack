@@ -2,6 +2,7 @@ import os
 import json
 from datasets import load_dataset
 from src.models.whisper import WhisperModel
+from src.models.canary import CanaryModel
 from tqdm import tqdm
 
 LANG_MAPPER = {
@@ -57,7 +58,10 @@ def _prep_samples(data, use_pred_for_ref, model_name, lang, task, split, device)
     samples = []
     whisper_model = None
     if use_pred_for_ref:
-        whisper_model = WhisperModel(model_name=model_name, task=task, language=lang, device=device)
+        if 'canary' in model_name:
+            whisper_model = CanaryModel(device=device, task=task, language=lang)
+        else:
+            whisper_model = WhisperModel(model_name=model_name, task=task, language=lang, device=device)
         print(f"Generating predictions for the dataset ({task})...")
 
     for sample in tqdm(list(data), desc="Processing samples"):
@@ -146,7 +150,10 @@ def _prep_parallel_samples(src_data, tgt_data, common_ids, use_pred_for_ref, mod
     """
     whisper_model_tgt = None
     if use_pred_for_ref:
-        whisper_model_tgt = WhisperModel(model_name=model_name, task='translate', language=tgt_lang, device=device)
+        if 'canary' in model_name:
+            whisper_model_tgt = CanaryModel(device=device, task='translate', language=f'{src_lang}_{tgt_lang}')
+        else:
+            whisper_model_tgt = WhisperModel(model_name=model_name, task='translate', language=src_lang, device=device)
         print("Generating predictions for parallel dataset...")
         cache_dir = os.path.join(CACHE_DIR, f"{src_lang}_{tgt_lang}", model_name or "default", "translate", split)
         os.makedirs(cache_dir, exist_ok=True)
