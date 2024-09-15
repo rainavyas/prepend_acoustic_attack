@@ -1,5 +1,5 @@
 from .whisper import WhisperModel, WhisperModelEnsemble
-from .canary import CanaryModel
+# from .canary import CanaryModel
 
 def load_model(core_args, device=None):
     if len(core_args.model_name) > 1:

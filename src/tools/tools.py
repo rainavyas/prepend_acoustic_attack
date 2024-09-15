@@ -9,7 +9,7 @@ import seaborn as sns
 import nltk
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 import matplotlib.pyplot as plt
-from comet import download_model, load_from_checkpoint
+# from comet import download_model, load_from_checkpoint
 
 
 from langdetect import detect, DetectorFactory, detect_langs

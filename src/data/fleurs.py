@@ -2,7 +2,7 @@ import os
 import json
 from datasets import load_dataset
 from src.models.whisper import WhisperModel
-from src.models.canary import CanaryModel
+# from src.models.canary import CanaryModel
 from tqdm import tqdm
 
 LANG_MAPPER = {
