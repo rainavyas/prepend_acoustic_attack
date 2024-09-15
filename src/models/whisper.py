@@ -4,7 +4,7 @@ import editdistance
 from whisper.tokenizer import get_tokenizer
 
 
-CACHE_DIR = '/home/vr313/rds/rds-altaslp-8YSp2LXTlkY/experiments/rm2114/.cache'
+CACHE_DIR = '/workspaces/prepend_acoustic_attack/experiments/.cache'
 
 MODEL_NAME_MAPPER = {
     'whisper-tiny'  : 'tiny.en',
