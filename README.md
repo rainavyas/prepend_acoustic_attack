@@ -143,7 +143,7 @@ Muting Whisper work published at EMNLP 2024.
 ```
 
 
-Controlling Whisper work published at SLT 2024.
+Parts of this codebase can also be used for a separate, but related work: Controlling Whisper work published at SLT 2024.
 
 ```bibtex
 @misc{raina2024controllingwhisperuniversalacoustic,
