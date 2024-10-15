@@ -1,6 +1,6 @@
 # Overview
 
-This is the offical codebase for the Paper _Muting Whisper: A Universal Acoustic Adversarial Attack on Speech Foundation Models_
+This is the offical codebase for the Paper _Muting Whisper: A Universal Acoustic Adversarial Attack on Speech Foundation Models_. This work is published as a main conference paper at EMNLP 2024.
 
 ## Abstract
 Recent developments in large speech foundation models like Whisper have led to their widespread use in many automatic speech recognition (ASR) applications. These systems incorporate _special tokens_ in their vocabulary, such as `<endoftext>`, to guide their language generation process. However, we demonstrate that these tokens can be exploited by adversarial attacks to manipulate the model's behavior. We propose a simple yet effective method to learn a universal acoustic realization of Whisper's `<endoftext>` token, which, when prepended to any speech signal, encourages the model to ignore the speech and only transcribe the special token, effectively _muting_ the model. Our experiments demonstrate that the same, universal 0.64-second adversarial audio segment can successfully mute a target Whisper ASR model for over 97% of speech samples. Moreover, we find that this universal adversarial audio segment often transfers to new datasets and tasks. Overall this work demonstrates the vulnerability of Whisper models to _muting_ adversarial attacks, where such attacks can pose both risks and potential benefits in real-world settings: for example the attack can be used to bypass speech moderation systems, or conversely the attack can also be used to protect private speech data.
@@ -125,4 +125,28 @@ include results and graphs here
 
 # Citation
 
-If you use this codebase, please cite our work.
+If you use this codebase or a part of this codebase, please cite our relevant work.
+
+```bibtex
+@misc{raina2024mutingwhisperuniversalacoustic,
+      title={Muting Whisper: A Universal Acoustic Adversarial Attack on Speech Foundation Models}, 
+      author={Vyas Raina and Rao Ma and Charles McGhee and Kate Knill and Mark Gales},
+      year={2024},
+      eprint={2405.06134},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2405.06134}, 
+}
+```
+
+```bibtex
+@misc{raina2024controllingwhisperuniversalacoustic,
+      title={Controlling Whisper: Universal Acoustic Adversarial Attacks to Control Speech Foundation Models}, 
+      author={Vyas Raina and Mark Gales},
+      year={2024},
+      eprint={2407.04482},
+      archivePrefix={arXiv},
+      primaryClass={cs.SD},
+      url={https://arxiv.org/abs/2407.04482}, 
+}
+```
