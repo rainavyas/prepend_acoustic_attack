@@ -127,6 +127,9 @@ include results and graphs here
 
 If you use this codebase or a part of this codebase, please cite our relevant work.
 
+
+Muting Whisper work published at EMNLP 2024.
+
 ```bibtex
 @misc{raina2024mutingwhisperuniversalacoustic,
       title={Muting Whisper: A Universal Acoustic Adversarial Attack on Speech Foundation Models}, 
@@ -138,6 +141,9 @@ If you use this codebase or a part of this codebase, please cite our relevant wo
       url={https://arxiv.org/abs/2405.06134}, 
 }
 ```
+
+
+Controlling Whisper work published at SLT 2024.
 
 ```bibtex
 @misc{raina2024controllingwhisperuniversalacoustic,
