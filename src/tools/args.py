@@ -30,7 +30,8 @@ def core_args():
         "--data_name",
         type=str,
         default="librispeech",
-        help="dataset for exps; for flores: flores-english-french",
+        nargs="+",
+        help="dataset for exps;",
     )
     commandLineParser.add_argument(
         "--use_pred_for_ref", action="store_true", help="Implemented for Fleurs dataset. Use model predictions for the reference transcriptions."
