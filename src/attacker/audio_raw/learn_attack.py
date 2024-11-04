@@ -93,7 +93,7 @@ class AudioAttack(AudioBaseAttacker):
         audio_vectors = pad_sequence(audio_vectors)
         audio_vectors = torch.stack(audio_vectors, dim=0)
         ds = TensorDataset(audio_vectors)
-        dl = DataLoader(ds, batch_size=bs, shuffle=shuffle)
+        dl = DataLoader(ds, batch_size=bs, shuffle=shuffle, num_workers=8)
         return dl
 
 

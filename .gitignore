@@ -1,3 +1,9 @@
 .pyc
 __pycache__/
 .venv/
+.ipynb_checkpoints
+data
+CMDs
+experiments
+.idea
+temp.ipynb

@@ -131,6 +131,7 @@ class AudioAttackCanaryModelWrapper(nn.Module):
             sample_rate = 16000
             torchaudio.save('experiments/temp_audio.wav', audio.cpu(), sample_rate)
 
-        return canary_model.predict('experiments/temp_audio.wav')
+            return canary_model.predict('experiments/temp_audio.wav')
+        return canary_model.predict(audio)
 
 
