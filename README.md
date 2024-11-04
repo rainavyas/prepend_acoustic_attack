@@ -31,19 +31,21 @@ In the paper, `tiny`, `base`, `small` and `medium` refer to the multi-lingual ve
 
 ## Package Installation
 
-This code has been tested on python>=3.9.
+The latest version of the code was tested on python>=3.10
 
 Fork the repository and then git clone
 
 `git clone https://github.com/<username>/prepend_acoustic_attack`
 
-
-Install all necessary packages by creating a conda environment from the existing `environment.yml` file.
+Install all necessary packages by creating a conda environment from the existing `environment_py310.yml` file.
 
 ```
-conda env create -f environment.yml
+conda env create -f environment_py310.yml
 conda activate venv_gector
 ```
+
+The older version of the code was tested on python>=3.9. It associated environment is `environment.yml`. Note that this environment does not support canary.
+
 
 ## Standard Arguments for Attack Configuration
 
@@ -55,7 +57,7 @@ The following arguments specify the attack configuration:
 - `attack_method`: What form of acoustic attack to learn. For this paper, we always use `audio-raw`.
 - `clip_val` : The maximum amplitude (for imperceptibility) of the attack audio segment. Set to `0.02` in the paper.
 - `attack_size` : The number of audio frames in the adversarial audio segment. Standard setting is `10,240`, which is equivalent to 0.64 seconds of adversarial audio, for audio sampled at 16kHz.
-- `data_name` : The dataset on which the universal attack is to be trained / evaluated. Note that training is on the validation split of the dataset.
+- `data_name` : The dataset on which the universal attack is to be trained / evaluated. Note that training is on the validation split of the dataset. A list of datasets can also be passed here for certain functionalities at test time.
 - `task` : This can either be `transcribe` or `translate`. This specifies the task that the Whisper model is required to do. Note that `translate` is only possible for the multi-lingual models.
 - `language`: The source audio language. By default is `en`.
 
@@ -107,20 +109,6 @@ The below example looks at the transferability of an attack learnt on _librispee
 The next examples looks at the transferability of an attack learnt on _librispeech_ for the _transcribe_ task, to the _fleurs_ French dataset for the _translate_ task.
 
 `python eval_attack.py --model_name whisper-tiny-multi --data_name fleurs --attack_size 10240 --language fr --task translate --attack_method audio-raw --attack_epoch 40 --transfer --attack_model_dir experiments/librispeech/whisper-tiny-multi/transcribe/en/attack_train/audio-raw/attack_size10240/clip_val0.02/prepend_attack_models/ --not_none`
-
-
-## Analysis
-
-Various forms of analysis are conducted in the paper. Here we give the commands used to generate the numbers given in the paper.
-
-
-# Data
-
-Describe here how certain datasets need to pre-downloaded and stored in particular directory. Also specify which part of the code needs to be updated to point to this directory.
-
-# Results
-
-include results and graphs here
 
 
 # Citation
