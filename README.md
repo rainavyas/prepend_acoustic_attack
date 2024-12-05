@@ -41,7 +41,7 @@ Install all necessary packages by creating a conda environment from the existing
 
 ```
 conda env create -f environment_py310.yml
-conda activate venv_gector
+conda activate env_py310
 ```
 
 The older version of the code was tested on python>=3.9. It associated environment is `environment.yml`. Note that this environment does not support canary.
